@@ -18,7 +18,7 @@ export default function NotFound() {
       />
       <h1 className="mt-6 text-6xl font-black text-gradient-gold sm:text-7xl">۴۰۴</h1>
       <p className="mt-4 max-w-md text-base leading-8 text-foreground/60">
-        این صفحه مثل نور آخر کنسرت خاموش شده! آدرس را اشتباه رفته‌اید یا صفحه
+        این صفحه مثل نور آخر همایش خاموش شده! آدرس را اشتباه رفته‌اید یا صفحه
         جابه‌جا شده است.
       </p>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">

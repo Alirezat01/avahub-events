@@ -11,22 +11,22 @@ export type SampleEvent = {
 
 export const EVENT_CATEGORIES = [
   "همه",
-  "کنسرت",
+  "کنفرانس",
   "همایش",
-  "فستیوال",
+  "سمینار",
   "کارگاه",
   "برندینگ",
 ] as const;
 
 export const SAMPLE_EVENTS: SampleEvent[] = [
   {
-    slug: "concert-irani",
-    title: "کنسرت بزرگ موسیقی ایرانی",
-    category: "کنسرت",
+    slug: "innovation-conference",
+    title: "کنفرانس نوآوری و فناوری",
+    category: "کنفرانس",
     day: "۱۲",
     month: "شهریور",
     place: "تهران، برج میلاد",
-    image: "/images/event-concert.png",
+    image: "/images/event-seminar.png",
     badge: "پیش‌فروش",
   },
   {
@@ -39,13 +39,13 @@ export const SAMPLE_EVENTS: SampleEvent[] = [
     image: "/images/event-conference.png",
   },
   {
-    slug: "free-music-festival",
-    title: "فستیوال موسیقی آزاد",
-    category: "فستیوال",
+    slug: "business-growth-seminar",
+    title: "سمینار رشد کسب‌وکار",
+    category: "سمینار",
     day: "۱۴",
     month: "آبان",
-    place: "تهران، پارک ملت",
-    image: "/images/event-festival.png",
+    place: "تهران، هتل اسپیناس پالاس",
+    image: "/images/event-panel.png",
   },
   {
     slug: "content-workshop",

@@ -6,19 +6,19 @@ import { Reveal } from "@/components/avahub/reveal";
 import { CtaBanner } from "@/components/avahub/sections";
 
 export const metadata: Metadata = {
-  title: "نمونه‌کارها | کنسرت، همایش و رویدادهای برند",
+  title: "نمونه‌کارها | همایش، سمینار و رویدادهای برند",
   description:
-    "نمونه‌کارهای آواهاب ایونتس؛ اجرای کنسرت، همایش و کنفرانس، رویدادهای برند و پشت‌صحنه‌های حرفه‌ای در تهران و شهرهای دیگر.",
+    "نمونه‌کارهای آواهاب ایونتس؛ اجرای همایش، سمینار و کنفرانس، رویدادهای برند و پشت‌صحنه‌های حرفه‌ای در تهران و شهرهای دیگر.",
   alternates: { canonical: "/portfolio" },
 };
 
 const WORKS = [
-  { image: "/images/event-concert.png", title: "اجرای زنده و کنسرت", tag: "کنسرت" },
+  { image: "/images/event-seminar.png", title: "کنفرانس و سمینار تخصصی", tag: "کنفرانس" },
   { image: "/images/event-conference.png", title: "همایش و کنفرانس", tag: "همایش" },
-  { image: "/images/about-backstage.png", title: "پشت‌صحنه اجرا", tag: "پشت‌صحنه" },
-  { image: "/images/event-festival.png", title: "جشنواره موسیقی", tag: "جشنواره" },
+  { image: "/images/about-backstage.png", title: "پشت‌صحنه رویداد", tag: "پشت‌صحنه" },
+  { image: "/images/event-panel.png", title: "نشست تخصصی و پنل برند", tag: "سمینار" },
   { image: "/images/portfolio-branding.png", title: "هویت بصری رویداد", tag: "برندینگ" },
-  { image: "/images/hero-bg.png", title: "اجرای بزرگ سالان", tag: "اجرای ویژه" },
+  { image: "/images/hero-bg.png", title: "رویداد بزرگ سالان", tag: "رویداد ویژه" },
 ];
 
 export default function PortfolioPage() {
@@ -62,8 +62,8 @@ export default function PortfolioPage() {
             <Camera className="size-6 text-gold/70" aria-hidden="true" />
             <p className="max-w-xl text-sm leading-7 text-foreground/50">
               این چیدمان آماده میزبانی نمونه‌کارهای واقعی شماست؛ تصاویر اصلی
-              کنسرت‌ها و همایش‌ها از طریق پنل مدیریت آپلود و همین‌جا نمایش داده
-              می‌شود.
+              همایش‌ها و رویدادهای برند از طریق پنل مدیریت آپلود و همین‌جا
+              نمایش داده می‌شود.
             </p>
           </div>
         </Reveal>

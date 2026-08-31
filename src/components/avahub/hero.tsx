@@ -18,7 +18,7 @@ const STATS = [
   { value: 650, prefix: "+", label: "رویداد برگزار شده" },
   { value: 120, prefix: "+", suffix: "K", label: "تبلیغ موفق" },
   { value: 98, suffix: "٪", label: "رضایت کاربران" },
-  { value: 210, prefix: "+", label: "هنرمند و برند" },
+  { value: 210, prefix: "+", label: "برند و سازمان" },
 ];
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
@@ -59,7 +59,7 @@ export function Hero() {
       onMouseMove={onMouseMove}
       className="relative flex min-h-[100svh] flex-col overflow-hidden"
     >
-      {/* ── Background: concert crowd + parallax ── */}
+      {/* ── Background: event audience + parallax ── */}
       <motion.div aria-hidden="true" className="absolute -inset-x-4 inset-0" style={reduced ? undefined : { x: bgX }}>
         <Image
           src="/images/hero-bg.png"
