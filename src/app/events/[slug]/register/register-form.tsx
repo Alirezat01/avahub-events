@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Clock3,
   Loader2,
+  QrCode,
   ShieldCheck,
   Ticket,
 } from "lucide-react";
@@ -63,6 +64,15 @@ export function RegisterForm({
           {state.message}
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
+          {!isWaitlist && state.regId && (
+            <Link
+              href={`/pass/${state.regId}`}
+              className="inline-flex items-center gap-2 rounded-full bg-gold px-6 py-2.5 text-sm font-black text-charcoal transition-shadow hover:shadow-[0_0_35px_rgba(212,175,55,0.45)]"
+            >
+              <QrCode className="size-4" aria-hidden="true" />
+              دریافت کارت ورود (QR)
+            </Link>
+          )}
           <Link
             href="/account"
             className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground transition-shadow hover:shadow-[0_0_35px_rgba(212,175,55,0.35)]"
@@ -77,6 +87,11 @@ export function RegisterForm({
             رویدادهای دیگر
           </Link>
         </div>
+        {!isWaitlist && state.regId && (
+          <p className="mt-4 text-[11px] leading-5 text-foreground/45">
+            کارت ورود شما همین حالا صادر شده — می‌توانید تصویر QR را نگه دارید یا چاپ کنید.
+          </p>
+        )}
       </div>
     );
   }

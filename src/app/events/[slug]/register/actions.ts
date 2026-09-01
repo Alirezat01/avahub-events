@@ -17,10 +17,13 @@ import {
 import { CONSENT_VERSION } from "@/lib/avahub/consent";
 import { sendRegistrationEmail } from "@/lib/avahub/email";
 import { formatJalaliDate, formatTimeFa } from "@/lib/avahub/jalali";
+import { emailPassUrl } from "@/lib/avahub/pass";
 
 export type RegisterState = {
   status: "idle" | "success" | "waitlisted" | "error";
   message?: string;
+  /** شناسهٔ ثبت‌نام — برای لینک مستقیم کارت ورود QR بعد از ثبت موفق */
+  regId?: string;
 };
 
 export async function submitRegistration(
@@ -100,6 +103,16 @@ export async function submitRegistration(
 
     if (!result.ok) return { status: "error", message: result.message };
 
+    // شناسهٔ ثبت‌نام برای صدور کارت ورود QR (هم در state و هم ایمیل)
+    const issuedReg =
+      result.kind === "registered"
+        ? await db.registration.findFirst({
+            where: { eventId: event.id, profileId: profile.id },
+            orderBy: { createdAt: "desc" },
+            select: { id: true },
+          })
+        : null;
+
     const emailSent = await sendRegistrationEmail({
       to: profile.email,
       name: profile.fullName,
@@ -109,6 +122,7 @@ export async function submitRegistration(
       venue: event.venueName ?? event.venueCity,
       kind: result.kind === "waitlisted" ? "waitlisted" : "registered",
       eventUrl: `https://www.avahubevents.com/events/${slug}`,
+      passUrl: issuedReg ? emailPassUrl(issuedReg.id) : undefined,
     }).catch(() => false);
 
     revalidatePath("/account");
@@ -127,6 +141,7 @@ export async function submitRegistration(
       message: emailSent
         ? "ثبت‌حضور شما قطعی شد؛ ایمیل تأیید برایتان ارسال شد. ✅"
         : "ثبت‌حضور شما قطعی شد. ✅",
+      regId: issuedReg?.id,
     };
   } catch {
     return {

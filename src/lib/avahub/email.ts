@@ -17,6 +17,8 @@ type RegistrationEmailInput = {
   venue: string;
   kind: "registered" | "waitlisted" | "cancelled";
   eventUrl?: string;
+  /** لینک کارت ورود QR — فقط برای kind=registered */
+  passUrl?: string;
 };
 
 function shell(title: string, body: string): string {
@@ -66,6 +68,7 @@ export async function sendRegistrationEmail(
         ${row("زمان", `${input.eventDateFa}${input.eventTimeFa ? ` — ${input.eventTimeFa}` : ""}`)}
         ${row("مکان", input.venue)}
       </table>
+      ${input.passUrl ? `<div style="margin:20px 0 4px;text-align:center;"><a href="${input.passUrl}" style="display:inline-block;background:#d4af37;color:#0a0a0f;font-weight:bold;text-decoration:none;padding:12px 28px;border-radius:999px;font-size:14px;">🎫 مشاهده کارت ورود (QR)</a></div><p style="margin:10px 0 0;color:#9a9aa5;font-size:12px;text-align:center;">هنگام ورود کافی است همین کارت را (تصویر یا چاپ‌شده) ارائه کنید.</p>` : ""}
       ${input.eventUrl ? `<p style="margin:16px 0 0;"><a href="${input.eventUrl}" style="color:#d4af37;">جزئیات کامل رویداد را ببینید ←</a></p>` : ""}
       <p style="margin:16px 0 0;color:#9a9aa5;font-size:12px;">برای مشاهده رویدادهای ثبت‌نامی‌تان به بخش «حساب کاربری» در سایت مراجعه کنید. اگر قصد انصراف دارید، از همان‌جا به‌راحتی انصراف بدهید تا جایگاه به نفر بعدی لیست انتظار برسد.</p>`;
   } else if (input.kind === "waitlisted") {

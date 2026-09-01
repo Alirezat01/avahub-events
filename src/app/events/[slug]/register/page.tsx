@@ -10,6 +10,7 @@ import {
   Info,
   MapPin,
   Music,
+  QrCode,
   Ticket,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
@@ -22,6 +23,7 @@ import {
 } from "@/lib/avahub/registration";
 import { CONSENT_LABEL, CONSENT_VERSION } from "@/lib/avahub/consent";
 import { formatJalaliDate, formatTimeFa } from "@/lib/avahub/jalali";
+import { getSiteOrigin, passPath, qrDataUrl } from "@/lib/avahub/pass";
 import { RegisterForm } from "./register-form";
 
 export const dynamic = "force-dynamic";
@@ -82,6 +84,15 @@ export default async function RegisterPage({ params, searchParams }: Props) {
 
   const activeReg =
     existingReg && existingReg.status !== "CANCELLED" ? existingReg : null;
+
+  // کارت ورود QR — برای ثبت‌نام قطعی، همین‌جا پیش‌نمایش کوچک کد نشان داده می‌شود
+  const passUrl = activeReg
+    ? `${await getSiteOrigin()}${passPath(activeReg.id)}`
+    : null;
+  const passQr =
+    activeReg?.status === "CONFIRMED" && passUrl
+      ? await qrDataUrl(passUrl).catch(() => null)
+      : null;
 
   const startsAt = event.startsAt;
   const specialItems = [
@@ -221,10 +232,42 @@ export default async function RegisterPage({ params, searchParams }: Props) {
                   {activeReg.status === "CONFIRMED" ? "ثبت‌نام قطعی" : "در انتظار تأیید"}
                 </b>
               </p>
+
+              {passQr && (
+                <Link
+                  href={passPath(activeReg.id)}
+                  className="group mx-auto mt-5 block w-fit rounded-2xl border border-gold/30 bg-white p-2.5 transition-shadow hover:shadow-[0_0_35px_rgba(212,175,55,0.35)]"
+                  aria-label="دیدن کارت ورود"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={passQr}
+                    alt="کد QR کارت ورود"
+                    width={104}
+                    height={104}
+                    className="h-[104px] w-[104px]"
+                  />
+                </Link>
+              )}
+              {passQr && (
+                <p className="mt-2 text-[11px] text-foreground/50">
+                  کارت ورود شما آماده است — روی کد بزنید
+                </p>
+              )}
+
               <div className="mt-6 flex flex-wrap justify-center gap-3">
+                {activeReg.status === "CONFIRMED" && (
+                  <Link
+                    href={passPath(activeReg.id)}
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground transition-shadow hover:shadow-[0_0_35px_rgba(212,175,55,0.35)]"
+                  >
+                    <QrCode className="size-4" aria-hidden="true" />
+                    کارت ورود (QR)
+                  </Link>
+                )}
                 <Link
                   href="/account"
-                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-2.5 text-sm font-bold text-primary-foreground"
+                  className="inline-flex items-center gap-2 rounded-full border border-border bg-card/60 px-6 py-2.5 text-sm font-bold text-foreground/75"
                 >
                   <Ticket className="size-4" aria-hidden="true" />
                   رویدادهای من
