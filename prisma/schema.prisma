@@ -1,32 +1,218 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+// ═══════════════════════════════════════════════════════════════
+// AVAHUB EVENTS — Phase 1 Database Schema (PostgreSQL / Supabase)
+// ۸ جدول: profiles, categories, events, campaigns, registrations,
+//         waitlists, checkins, admins
+// ⭐ نیازمندی کلیدی کاربر: استخراج شماره موبایل‌ها از پنل ادمین
+//    → profiles.phone یکتا + ایندکس + آماده خروجی CSV/Excel
+// ═══════════════════════════════════════════════════════════════
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+// ─────────────────────────── Enums ───────────────────────────
+
+enum EventStatus {
+  DRAFT      /// پیش‌نویس — فقط ادمین می‌بیند
+  PUBLISHED  /// منتشر شده — در سایت نمایش داده می‌شود
+  CANCELLED  /// لغو شده
+  ARCHIVED   /// آرشیو — بدون حذف داده‌ها
 }
 
-model Post {
-  id        String   @id @default(cuid())
+enum RegistrationStatus {
+  PENDING    /// ثبت‌نام شده، در انتظار تأیید ایمیل
+  CONFIRMED  /// تأیید شده — QR Pass صادر می‌شود
+  CANCELLED  /// لغو شده توسط کاربر یا ادمین
+}
+
+enum WaitlistStatus {
+  ACTIVE     /// در صف انتظار
+  PROMOTED   /// ارتقا یافته به ثبت‌نام (جای خالی باز شد)
+  CANCELLED  /// انصراف از صف
+}
+
+enum CheckinMethod {
+  QR_CODE  /// اسکن QR در ورودی
+  MANUAL   /// تیک دستی توسط ادمین
+}
+
+enum AdminRole {
+  SUPER_ADMIN   /// دسترسی کامل — کاربر اصلی
+  EVENT_MANAGER /// مدیریت رویدادها و ثبت‌نامی‌ها
+  STAFF         /// فقط چک‌این
+}
+
+// ─────────────────────── 1. profiles (کاربران) ───────────────────────
+// ⭐ قلب دیتابیس مخاطبان — فیلد phone یکتا برای استخراج از پنل ادمین
+
+model Profile {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  authUserId      String?   @unique @db.Uuid /// اتصال به Supabase Auth (فاز ۲)
+  fullName        String?
+  email           String    @unique
+  phone           String?   @unique /// ⭐ شماره موبایل — مهم‌ترین فیلد برای کاربر
+  phoneVerifiedAt DateTime? /// تأیید شماره (فازهای بعد)
+  city            String?   /// برای تفکیک جغرافیایی مخاطبان
+  birthYear       Int?      /// برای گروه‌بندی سنی
+  interests       String[]  @default([]) /// دسته‌های علاقه‌مندی برای تارگتینگ
+  firstSource     String?   /// اولین منبع ورود (UTM) — شناخت کانال جذب
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @default(now()) @updatedAt
+
+  registrations Registration[]
+  waitlists     Waitlist[]
+  adminRecord   Admin?
+
+  @@map("profiles")
+}
+
+// ─────────────────────── 2. categories ───────────────────────
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  slug      String   @unique
   title     String
-  content   String?
-  published Boolean  @default(false)
-  authorId  String
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  events Event[]
+
+  @@map("categories")
+}
+
+// ─────────────────────── 3. events ───────────────────────
+// رویدادها هرگز Hard-Delete نمی‌شوند (status = ARCHIVED) تا داده مخاطبان حفظ شود
+
+model Event {
+  id              String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug            String      @unique
+  title           String
+  summary         String?     /// توضیح کوتاه برای کارت رویداد
+  description     String?     /// توضیح کامل صفحه رویداد
+  coverImage      String?     /// مسیر کاور (Media Manager ادمین)
+  categoryId      Int?
+  startsAt        DateTime
+  endsAt          DateTime?
+  venueName       String?
+  venueAddress    String?
+  venueCity       String      @default("تهران")
+  capacity        Int         @default(0) /// ۰ = بدون محدودیت
+  waitlistEnabled Boolean     @default(true) /// لیست انتظار خودکار
+  isFeatured      Boolean     @default(false) /// نمایش ویژه در صفحه اصلی
+  status          EventStatus @default(DRAFT)
+  metaTitle       String?     /// SEO — title اختصاصی
+  metaDescription String?     /// SEO — description اختصاصی
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @default(now()) @updatedAt
+
+  category      Category?      @relation(fields: [categoryId], references: [id])
+  registrations Registration[]
+  waitlists     Waitlist[]
+
+  @@index([status, startsAt]) /// کوئری اصلی سایت: رویدادهای منتشرشده آینده
+  @@index([categoryId])
+  @@map("events")
+}
+
+// ─────────────────────── 4. campaigns (کمپین‌های UTM) ───────────────────────
+
+model Campaign {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name        String   /// نام فارسی کمپین
+  source      String   /// instagram / telegram / google / qr / partner / direct
+  medium      String?  /// post / story / cpc / banner ...
+  utmCampaign String?  /// مقدار utm_campaign
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  registrations Registration[]
+
+  @@index([source])
+  @@map("campaigns")
+}
+
+// ─────────────────────── 5. registrations (ثبت حضور) ───────────────────────
+// ⭐ برای استخراج شماره‌ها: JOIN با profiles (relation مستقیم)
+
+model Registration {
+  id          String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId     String             @db.Uuid
+  profileId   String             @db.Uuid
+  campaignId  String?            @db.Uuid /// کدام کمپین این ثبت‌نام را آورد
+  status      RegistrationStatus @default(PENDING)
+  utmSource   String?            /// اسنپ‌شات UTM هنگام ثبت‌نام
+  utmMedium   String?
+  utmCampaign String?
+  notes       String?            /// یادداشت ادمین
+  confirmedAt DateTime?
+  cancelledAt DateTime?
+  createdAt   DateTime           @default(now())
+
+  event    Event     @relation(fields: [eventId], references: [id])
+  profile  Profile   @relation(fields: [profileId], references: [id])
+  campaign Campaign? @relation(fields: [campaignId], references: [id])
+  checkin  Checkin?
+
+  @@unique([eventId, profileId]) /// هر کاربر فقط یک ثبت‌نام در هر رویداد
+  @@index([eventId, status])     /// پنل ادمین: ثبت‌نامی‌های یک رویداد
+  @@index([profileId])
+  @@index([createdAt])           /// گزارش‌های زمانی
+  @@map("registrations")
+}
+
+// ─────────────────────── 6. waitlists (لیست انتظار) ───────────────────────
+
+model Waitlist {
+  id         String         @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  eventId    String         @db.Uuid
+  profileId  String         @db.Uuid
+  position   Int            /// نوبت در صف
+  status     WaitlistStatus @default(ACTIVE)
+  notifiedAt DateTime?      /// کی خبر شد جای خالی باز شده
+  createdAt  DateTime       @default(now())
+
+  event   Event   @relation(fields: [eventId], references: [id])
+  profile Profile @relation(fields: [profileId], references: [id])
+
+  @@unique([eventId, profileId])
+  @@index([eventId, status])
+  @@map("waitlists")
+}
+
+// ─────────────────────── 7. checkins (چک‌این) ───────────────────────
+
+model Checkin {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  registrationId String        @unique @db.Uuid /// هر ثبت‌نام فقط یک چک‌این
+  method         CheckinMethod @default(QR_CODE)
+  checkedInAt    DateTime      @default(now()) /// ⭐ زمان ورود — برای گزارش‌ها
+  checkedByAdmin String?       @db.Uuid /// کدام ادمین چک‌این کرد
+  notes          String?
+
+  registration Registration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+
+  @@index([checkedInAt])
+  @@map("checkins")
+}
+
+// ─────────────────────── 8. admins ───────────────────────
+
+model Admin {
+  id        String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  profileId String    @unique @db.Uuid
+  role      AdminRole @default(STAFF)
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+
+  profile Profile @relation(fields: [profileId], references: [id])
+
+  @@map("admins")
 }
