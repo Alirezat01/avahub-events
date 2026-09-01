@@ -49,7 +49,7 @@ export default async function EventsPage() {
         )}
         {!dbError && events.length > 0 && (
           <p className="mt-10 text-center text-xs text-foreground/40">
-            ثبت‌حضور آنلاین رویدادها به‌زودی از همین صفحه فعال می‌شود.
+            ثبت‌حضور آنلاین فعال است — از صفحه هر رویداد جایگاه خود را رایگان رزرو کنید.
           </p>
         )}
       </section>

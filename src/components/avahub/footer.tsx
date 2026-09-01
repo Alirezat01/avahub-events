@@ -147,7 +147,15 @@ export function SiteFooter() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-xs text-foreground/40 sm:flex-row">
-          <p>© ۱۴۰۵ آواهاب ایونتس — تمامی حقوق محفوظ است.</p>
+          <p>
+            © ۱۴۰۵ آواهاب ایونتس — تمامی حقوق محفوظ است.{" "}
+            <Link
+              href="/terms"
+              className="transition-colors hover:text-gold"
+            >
+              توافق‌نامه کاربر و حریم خصوصی
+            </Link>
+          </p>
           <p className="flex items-center gap-1.5">
             <span aria-hidden="true" className="inline-block size-1.5 rounded-full bg-gold" />
             تجربه‌های ماندگار را دیجیتالی می‌کنیم

@@ -15,6 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BASE}/journal`, changeFrequency: "weekly", priority: 0.7 },
     { url: `${BASE}/about`, changeFrequency: "monthly", priority: 0.6 },
     { url: `${BASE}/contact`, changeFrequency: "monthly", priority: 0.8 },
+    { url: `${BASE}/terms`, changeFrequency: "yearly", priority: 0.3 },
   ] as const).map((route) => ({ ...route, lastModified: now }));
 
   const serviceRoutes: MetadataRoute.Sitemap = SERVICES.map((service) => ({

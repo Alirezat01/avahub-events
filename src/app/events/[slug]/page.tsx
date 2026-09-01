@@ -3,17 +3,28 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
+  Armchair,
   ArrowRight,
   CalendarDays,
+  CheckCircle2,
   Clock,
-  ListChecks,
+  Clock3,
+  Coffee,
+  Info,
   MapPin,
+  Music,
   Ticket,
   Users,
 } from "lucide-react";
 import { EventCard } from "@/components/avahub/event-card";
 import { getEventBySlug, getRelatedEvents } from "@/lib/avahub/events-db";
+import {
+  getEventCapacitySummary,
+  getUserRegistration,
+  getUserWaitlistEntry,
+} from "@/lib/avahub/registration";
 import { createClient } from "@/lib/supabase/server";
+import { db } from "@/lib/db";
 import {
   formatJalaliDate,
   formatJalaliShort,
@@ -54,11 +65,31 @@ export default async function EventDetailPage({ params }: Props) {
     () => [],
   );
 
-  // وضعیت لاگین کاربر — برای دکمه ثبت‌حضور (فعال‌سازی کامل در فاز ۴)
+  // وضعیت لاگین + ظرفیت زنده + وضعیت ثبت‌نام کاربر (فاز ۴)
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const capacity = await getEventCapacitySummary(event.id, event.capacity).catch(
+    () => ({ taken: 0, remaining: null as number | null, full: false }),
+  );
+
+  let myReg: Awaited<ReturnType<typeof getUserRegistration>> = null;
+  let myWaitlist: Awaited<ReturnType<typeof getUserWaitlistEntry>> = null;
+  if (user) {
+    const profile = await db.profile
+      .findFirst({ where: { authUserId: user.id }, select: { id: true } })
+      .catch(() => null);
+    if (profile) {
+      [myReg, myWaitlist] = await Promise.all([
+        getUserRegistration(event.id, profile.id).catch(() => null),
+        getUserWaitlistEntry(event.id, profile.id).catch(() => null),
+      ]);
+    }
+  }
+  const activeReg = myReg && myReg.status !== "CANCELLED" ? myReg : null;
+  const registerHref = `/events/${event.slug}/register`;
 
   const startsAt = event.startsAt;
   const endsAt = event.endsAt;
@@ -160,6 +191,52 @@ export default async function EventDetailPage({ params }: Props) {
               </div>
             </dl>
 
+            {/* باکس نکات خاص این رویداد — ادمین می‌نویسد، کاربر می‌بیند */}
+            {(() => {
+              const items = [
+                event.hasSeating === true
+                  ? { icon: Armchair, text: "این رویداد صندلی اختصاصی دارد." }
+                  : event.hasSeating === false
+                    ? {
+                        icon: Armchair,
+                        text: "این رویداد صندلی اختصاصی ندارد؛ نشستن آزاد است.",
+                      }
+                    : null,
+                event.cateringNote ? { icon: Coffee, text: event.cateringNote } : null,
+                event.musicInfo ? { icon: Music, text: event.musicInfo } : null,
+                event.specialNotes ? { icon: Info, text: event.specialNotes } : null,
+              ].filter((x): x is { icon: typeof Armchair; text: string } => !!x);
+              if (items.length === 0) return null;
+              return (
+                <section
+                  aria-labelledby="special-notes"
+                  className="mt-5 rounded-2xl border border-purple/25 bg-purple/[0.05] p-5"
+                >
+                  <h2
+                    id="special-notes"
+                    className="flex items-center gap-2 text-[13px] font-black text-foreground/90"
+                  >
+                    <Info className="size-4 text-purple" aria-hidden="true" />
+                    نکات مهم این رویداد
+                  </h2>
+                  <ul className="mt-3 space-y-2">
+                    {items.map((item, i) => (
+                      <li
+                        key={i}
+                        className="flex items-start gap-2 text-xs leading-6 text-foreground/65"
+                      >
+                        <item.icon
+                          className="mt-0.5 size-3.5 shrink-0 text-purple/80"
+                          aria-hidden="true"
+                        />
+                        <span>{item.text}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              );
+            })()}
+
             {/* باکس ثبت‌حضور */}
             <div className="relative mt-8 overflow-hidden rounded-3xl border border-gold/25 bg-charcoal/80 p-6 backdrop-blur">
               <div
@@ -172,29 +249,66 @@ export default async function EventDetailPage({ params }: Props) {
                     <Ticket className="size-5 text-gold" aria-hidden="true" />
                   </span>
                   <div>
-                    <p className="text-sm font-black">ثبت‌حضور آنلاین</p>
+                    <p className="text-sm font-black">ثبت‌حضور آنلاین — رایگان</p>
                     <p className="mt-0.5 text-xs text-foreground/55">
-                      {event.capacity > 0
-                        ? `ظرفیت محدود — ${event.capacity.toLocaleString("fa-IR")} نفر`
-                        : "بدون محدودیت ظرفیت"}
+                      {event.capacity > 0 ? (
+                        capacity.full ? (
+                          <span className="text-amber-300">
+                            ظرفیت تکمیل شده — {capacity.taken.toLocaleString("fa-IR")} نفر
+                          </span>
+                        ) : (
+                          `ظرفیت باقی‌مانده: ${(capacity.remaining ?? 0).toLocaleString("fa-IR")} نفر`
+                        )
+                      ) : (
+                        "بدون محدودیت ظرفیت"
+                      )}
                     </p>
                   </div>
                 </div>
-                {user ? (
-                  <span
-                    className="inline-flex cursor-default items-center gap-2 rounded-full border border-border bg-card/60 px-6 py-3 text-sm font-bold text-foreground/60"
-                    title="ثبت‌حضور در فاز بعدی فعال می‌شود"
-                  >
-                    <ListChecks className="size-4" aria-hidden="true" />
-                    به‌زودی فعال می‌شود
-                  </span>
-                ) : (
+                {!user ? (
                   <Link
-                    href={`/login?next=/events/${event.slug}`}
+                    href={`/login?next=${registerHref}`}
                     className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-bold text-primary-foreground shadow-[0_0_35px_rgba(212,175,55,0.28)] transition-all hover:shadow-[0_0_55px_rgba(212,175,55,0.45)]"
                   >
                     ورود و رزرو جایگاه
                     <ArrowRight className="size-4 rotate-180" aria-hidden="true" />
+                  </Link>
+                ) : activeReg ? (
+                  <Link
+                    href="/account"
+                    className="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-6 py-3 text-sm font-bold text-gold transition-colors hover:bg-gold/15"
+                  >
+                    <CheckCircle2 className="size-4" aria-hidden="true" />
+                    {activeReg.status === "CONFIRMED" ? "ثبت‌نام شما قطعی است" : "ثبت‌نام شما در انتظار تأیید"}
+                  </Link>
+                ) : myWaitlist ? (
+                  <Link
+                    href="/account"
+                    className="inline-flex items-center gap-2 rounded-full border border-purple/40 bg-purple/10 px-6 py-3 text-sm font-bold text-purple"
+                  >
+                    <Clock3 className="size-4" aria-hidden="true" />
+                    در لیست انتظار — نوبت {myWaitlist.position.toLocaleString("fa-IR")}
+                  </Link>
+                ) : capacity.full && !event.waitlistEnabled ? (
+                  <span className="inline-flex cursor-default items-center gap-2 rounded-full border border-border bg-card/60 px-6 py-3 text-sm font-bold text-foreground/50">
+                    ظرفیت تکمیل شده
+                  </span>
+                ) : (
+                  <Link
+                    href={registerHref}
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-bold text-primary-foreground shadow-[0_0_35px_rgba(212,175,55,0.28)] transition-all hover:shadow-[0_0_55px_rgba(212,175,55,0.45)]"
+                  >
+                    {capacity.full ? (
+                      <>
+                        عضویت در لیست انتظار
+                        <Clock3 className="size-4" aria-hidden="true" />
+                      </>
+                    ) : (
+                      <>
+                        ثبت‌حضور رایگان
+                        <ArrowRight className="size-4 rotate-180" aria-hidden="true" />
+                      </>
+                    )}
                   </Link>
                 )}
               </div>

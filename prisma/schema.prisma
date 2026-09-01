@@ -106,6 +106,11 @@ model Event {
   capacity        Int         @default(0) /// ۰ = بدون محدودیت
   waitlistEnabled Boolean     @default(true) /// لیست انتظار خودکار
   isFeatured      Boolean     @default(false) /// نمایش ویژه در صفحه اصلی
+  /// ── توضیحات خاص رویداد (ادمین می‌نویسد، کاربر موقع ثبت‌نام می‌بیند) ──
+  hasSeating      Boolean?    /// null = اهمیتی ندارد | false = صندلی ندارد (نشستن آزاد)
+  cateringNote    String?     /// وضعیت پذیرایی — مثال: «پذیرایی رایگان دارد» یا «ندارد»
+  musicInfo       String?     /// نوع موسیقی اجرا شده (در صورت وجود)
+  specialNotes    String?     /// نکات خاص دیگر برای نمایش به کاربر
   status          EventStatus @default(DRAFT)
   metaTitle       String?     /// SEO — title اختصاصی
   metaDescription String?     /// SEO — description اختصاصی
@@ -152,6 +157,11 @@ model Registration {
   utmMedium   String?
   utmCampaign String?
   notes       String?            /// یادداشت ادمین
+  /// ── پشتوانه حقوقی توافق‌نامه (فاز ۴) ──
+  consentVersion   String?   /// نسخه متن توافق‌نامه پذیرفته‌شده — مثال: v1-1405
+  consentAcceptedAt DateTime? /// زمان دقیق تیک زدن توافق‌نامه
+  /// ── انصراف ──
+  cancelledBy String?          /// USER / ADMIN — چه کسی لغو کرد
   confirmedAt DateTime?
   cancelledAt DateTime?
   createdAt   DateTime           @default(now())
