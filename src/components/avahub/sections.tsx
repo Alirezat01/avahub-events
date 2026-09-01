@@ -2,12 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, MapPin, Sparkles } from "lucide-react";
+import { ArrowLeft, Sparkles } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Reveal } from "./reveal";
 import { TiltCard } from "./tilt-card";
 import { SERVICES } from "@/lib/avahub/services";
-import { SAMPLE_EVENTS } from "@/lib/avahub/events";
 
 /* ─────────────────────────────  Section heading  ───────────────────────── */
 
@@ -99,106 +98,6 @@ export function ServicesSection() {
             </TiltCard>
           ))}
         </div>
-      </div>
-    </section>
-  );
-}
-
-/* ─────────────────────────────  Event card  ────────────────────────────── */
-
-export function EventCard({
-  event,
-  index = 0,
-}: {
-  event: (typeof SAMPLE_EVENTS)[number];
-  index?: number;
-}) {
-  return (
-    <TiltCard
-      delay={index * 0.08}
-      max={7}
-      className="h-full rounded-2xl"
-    >
-      <article className="tilt-root flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card/80 transition-all duration-300 group-hover:-translate-y-1 group-hover:border-gold/35 group-hover:shadow-[0_18px_50px_-18px_rgba(212,175,55,0.28)]">
-        <div className="relative aspect-[16/10] overflow-hidden">
-          <Image
-            src={event.image}
-            alt={event.title}
-            fill
-            sizes="(min-width: 1280px) 20vw, (min-width: 640px) 33vw, 50vw"
-            className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-          />
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 bg-gradient-to-t from-[#0a0a0f]/60 via-transparent to-transparent"
-          />
-          {/* Jalali date badge */}
-          <div className="absolute right-3 top-3 flex min-w-12 flex-col items-center rounded-xl border border-purple/40 bg-gradient-to-b from-[#7b4ddf]/90 to-[#5b35ad]/90 px-2 py-1.5 text-center shadow-lg backdrop-blur">
-            <span className="text-lg font-black leading-6 text-white">
-              {event.day}
-            </span>
-            <span className="text-[9px] font-medium leading-4 text-white/85">
-              {event.month}
-            </span>
-          </div>
-          {event.badge && (
-            <span className="absolute left-3 top-3 rounded-full bg-gradient-to-l from-[#e8cf7a] to-[#d4af37] px-2.5 py-1 text-[10px] font-black text-[#0a0a0f] shadow">
-              {event.badge}
-            </span>
-          )}
-        </div>
-        <div className="flex flex-1 flex-col p-4">
-          <span className="mb-1.5 text-[10px] font-bold tracking-wide text-purple">
-            {event.category}
-          </span>
-          <h3 className="text-sm font-black leading-6 transition-colors group-hover:text-gold-soft sm:text-[15px]">
-            {event.title}
-          </h3>
-          <p className="mt-2 inline-flex items-center gap-1.5 text-[11px] text-foreground/55">
-            <MapPin className="size-3.5 shrink-0 text-gold" aria-hidden="true" />
-            {event.place}
-          </p>
-        </div>
-      </article>
-    </TiltCard>
-  );
-}
-
-/* ─────────────────────────────  Events preview  ────────────────────────── */
-
-export function EventsSection() {
-  return (
-    <section className="relative py-20 sm:py-24">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6">
-        <Reveal>
-          <div className="mb-12 flex flex-col items-center justify-between gap-4 sm:flex-row-reverse sm:items-end">
-            <Link
-              href="/events"
-              className="group inline-flex items-center gap-1.5 text-sm font-bold text-gold transition-colors hover:text-gold-soft"
-            >
-              مشاهده همه
-              <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-1" aria-hidden="true" />
-            </Link>
-            <div className="text-center sm:text-right">
-              <p className="mb-2 text-xs font-bold tracking-[0.3em] text-gold-soft/90">
-                UPCOMING EVENTS
-              </p>
-              <h2 className="text-3xl font-black sm:text-4xl">رویدادهای پیش رو</h2>
-              <div aria-hidden="true" className="mt-3 h-px w-24 gold-line sm:mr-0" />
-            </div>
-          </div>
-        </Reveal>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 xl:grid-cols-5">
-          {SAMPLE_EVENTS.map((event, i) => (
-            <EventCard key={event.slug} event={event} index={i} />
-          ))}
-        </div>
-        <Reveal className="mt-8 text-center">
-          <p className="text-xs text-foreground/40">
-            نمونه‌های اولیه — پس از فعال‌سازی پنل مدیریت، رویدادهای واقعی از همین‌جا
-            نمایش داده می‌شوند.
-          </p>
-        </Reveal>
       </div>
     </section>
   );

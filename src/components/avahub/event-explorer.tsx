@@ -3,29 +3,40 @@
 import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { EVENT_CATEGORIES, SAMPLE_EVENTS } from "@/lib/avahub/events";
-import { EventCard } from "./sections";
+import { EventCard } from "./event-card";
+import type { EventCardData, CategoryData } from "@/lib/avahub/events-db";
 
 /**
- * Event explorer — live search + category filter chips (concept-board style).
+ * Event explorer — جستجوی زنده + فیلتر دسته‌بندی (فاز ۳)
+ * داده از دیتابیس به‌صورت props وارد می‌شود.
  */
-export function EventExplorer() {
+export function EventExplorer({
+  events,
+  categories,
+}: {
+  events: EventCardData[];
+  categories: CategoryData[];
+}) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string>("همه");
   const reduced = useReducedMotion();
 
+  const filterItems = ["همه", ...categories.map((c) => c.title)];
+
   const filtered = useMemo(() => {
     const q = query.trim();
-    return SAMPLE_EVENTS.filter((event) => {
+    return events.filter((event) => {
       const matchCategory = category === "همه" || event.category === category;
       const matchQuery =
         q === "" ||
         event.title.includes(q) ||
-        event.place.includes(q) ||
+        (event.summary ?? "").includes(q) ||
+        event.venueName?.includes(q) ||
+        event.venueCity.includes(q) ||
         event.category.includes(q);
       return matchCategory && matchQuery;
     });
-  }, [query, category]);
+  }, [events, query, category]);
 
   return (
     <div>
@@ -46,7 +57,7 @@ export function EventExplorer() {
           />
         </div>
         <div className="flex flex-wrap justify-center gap-2" role="group" aria-label="فیلتر دسته‌بندی">
-          {EVENT_CATEGORIES.map((cat) => {
+          {filterItems.map((cat) => {
             const active = category === cat;
             return (
               <button
