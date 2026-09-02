@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { PageHero } from "@/components/avahub/page-hero";
 import { EventExplorer } from "@/components/avahub/event-explorer";
 import { getUpcomingPublishedEvents, getActiveCategories } from "@/lib/avahub/events-db";
+import { JsonLd } from "@/components/avahub/json-ld";
+import { SITE_URL } from "@/lib/avahub/site";
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +28,23 @@ export default async function EventsPage() {
     dbError = true;
   }
 
+  // اسکیمای ItemList — فاز د۲ (SEO): فهرست رویدادها برای گوگل
+  const itemListJsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "رویدادهای پیش رو آواهاب ایونتس",
+    numberOfItems: events.length,
+    itemListElement: events.map((e, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `${SITE_URL}/events/${e.slug}`,
+      name: e.title,
+    })),
+  };
+
   return (
     <>
+      {!dbError && events.length > 0 && <JsonLd data={itemListJsonLd} />}
       <PageHero
         eyebrow="UPCOMING EVENTS"
         title="رویدادهای پیش رو"

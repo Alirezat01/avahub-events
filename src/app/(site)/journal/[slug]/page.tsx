@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { formatJalaliShort } from "@/lib/avahub/jalali";
 import { JsonLd } from "@/components/avahub/json-ld";
 import { SITE_URL, absoluteImageUrl } from "@/lib/avahub/site";
+import { SERVICES } from "@/lib/avahub/services";
 
 // ─────────────────────────────────────────────────────────────
 // صفحهٔ مقالهٔ مجله — فاز ۶
@@ -20,6 +21,24 @@ async function getPost(slug: string) {
   const post = await db.journalPost.findUnique({ where: { slug } });
   if (!post || post.status !== "PUBLISHED") return null;
   return post;
+}
+
+/** تطبیق هوشمند خدمات مرتبط با موضوع مقاله — فاز د۲ (لینک‌سازی داخلی) */
+function pickRelatedServices(title: string, tags: string[]): string[] {
+  const hay = `${title} ${tags.join(" ")}`;
+  const rules: Array<[RegExp, string]> = [
+    [/همایش|کنفرانس|سمینار|رویداد|ایونت|جشن/, "grand-event-house"],
+    [/تبلیغ|کمپین|گوگل|اینستاگرام|مارکتینگ|رسانه/, "novin-ad-studio"],
+    [/محتوا|ویدیو|تیزر|عکاسی|موشن/, "content-atelier"],
+    [/برند|هویت بصری|لوگو/, "brand-forge"],
+    [/استراتژی|مشاوره|برنامه‌ریزی/, "strategy-room"],
+  ];
+  const picked: string[] = [];
+  for (const [re, slug] of rules) {
+    if (re.test(hay)) picked.push(slug);
+    if (picked.length === 2) break;
+  }
+  return picked;
 }
 
 export async function generateMetadata({
@@ -85,9 +104,26 @@ export default async function JournalArticlePage({
     mainEntityOfPage: `${SITE_URL}/journal/${post.slug}`,
   };
 
+  // اسکیمای BreadcrumbList — فاز د۲ (SEO)
+  const breadcrumbJsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "خانه", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "مجله", item: `${SITE_URL}/journal` },
+      { "@type": "ListItem", position: 3, name: post.title, item: `${SITE_URL}/journal/${post.slug}` },
+    ],
+  };
+
+  const relatedSlugs = pickRelatedServices(post.title, post.tags);
+  const relatedServices = relatedSlugs
+    .map((slug) => SERVICES.find((s) => s.slug === slug))
+    .filter((s): s is (typeof SERVICES)[number] => Boolean(s));
+
   return (
     <>
       <JsonLd data={articleJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
       {/* هدر مقاله */}
       <section className="relative overflow-hidden border-b border-border">
         <div
@@ -173,6 +209,58 @@ export default async function JournalArticlePage({
           </Link>
         </div>
       </article>
+
+      {/* خدمات مرتبط — فاز د۲ (لینک‌سازی داخلی خدمات و مجله) */}
+      <section
+        aria-labelledby="related-services"
+        className="mx-auto max-w-3xl px-4 pb-16 sm:px-6"
+      >
+        <h2
+          id="related-services"
+          className="flex items-center gap-3 text-lg font-black"
+        >
+          <span aria-hidden="true" className="h-5 w-1 rounded-full bg-gradient-to-b from-gold to-purple" />
+          خدمات مرتبط آواهاب
+        </h2>
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          {relatedServices.map((service) => (
+            <Link
+              key={service.slug}
+              href={`/services/${service.slug}`}
+              className="group flex items-center gap-4 rounded-2xl border border-border bg-card/50 p-4 transition-colors hover:border-gold/40"
+            >
+              <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-gold/25 bg-gold/10">
+                <Image
+                  src={service.icon}
+                  alt={service.title}
+                  width={28}
+                  height={28}
+                  className="size-7 object-contain"
+                />
+              </span>
+              <span>
+                <span className="block text-sm font-black transition-colors group-hover:text-gold-soft">
+                  {service.title}
+                </span>
+                <span className="mt-1 block text-xs leading-6 text-foreground/55">
+                  {service.short}
+                </span>
+              </span>
+            </Link>
+          ))}
+          <Link
+            href="/services"
+            className="group flex items-center justify-between gap-4 rounded-2xl border border-dashed border-border bg-card/30 p-4 transition-colors hover:border-gold/40 sm:col-span-2"
+          >
+            <span className="text-sm font-bold text-foreground/75 transition-colors group-hover:text-gold-soft">
+              همه خدمات آواهاب ایونتس — از ایده تا اجرا
+            </span>
+            <span className="rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 text-xs font-bold text-gold-soft">
+              مشاهده خدمات
+            </span>
+          </Link>
+        </div>
+      </section>
     </>
   );
 }

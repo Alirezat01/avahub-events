@@ -1,4 +1,8 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /api
+Disallow: /account
+Disallow: /pass
 
 Sitemap: https://www.avahubevents.com/sitemap.xml

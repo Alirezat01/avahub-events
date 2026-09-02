@@ -135,9 +135,21 @@ export default async function EventDetailPage({ params }: Props) {
     },
   };
 
+  // اسکیمای BreadcrumbList — فاز د۲ (SEO)
+  const breadcrumbJsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "خانه", item: SITE_URL },
+      { "@type": "ListItem", position: 2, name: "رویدادها", item: `${SITE_URL}/events` },
+      { "@type": "ListItem", position: 3, name: event.title, item: `${SITE_URL}/events/${event.slug}` },
+    ],
+  };
+
   return (
     <main className="relative min-h-[100svh] overflow-hidden pb-24 pt-28">
       <JsonLd data={eventJsonLd} />
+      <JsonLd data={breadcrumbJsonLd} />
       {/* پس‌زمینه محیطی */}
       <div
         aria-hidden="true"
