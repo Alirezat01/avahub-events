@@ -29,15 +29,39 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <span className="hidden sm:inline">پنل مدیریت آواهاب</span>
               <span className="sm:hidden">پنل</span>
             </Link>
-            <nav className="flex items-center gap-1 sm:gap-2 text-sm text-white/70">
-              <Link href="/admin" className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition">
+            <nav className="flex items-center gap-1 text-xs sm:gap-1.5 sm:text-sm text-white/70 overflow-x-auto">
+              <Link href="/admin" className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap">
                 داشبورد
               </Link>
               <Link
                 href="/admin/events/new"
-                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition"
+                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
               >
                 رویداد جدید
+              </Link>
+              <Link
+                href="/admin/journal"
+                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
+              >
+                مجله
+              </Link>
+              <Link
+                href="/admin/portfolio"
+                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
+              >
+                نمونه‌کارها
+              </Link>
+              <Link
+                href="/admin/media"
+                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
+              >
+                رسانه‌ها
+              </Link>
+              <Link
+                href="/admin/analytics"
+                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
+              >
+                آمار
               </Link>
             </nav>
           </div>
@@ -60,7 +84,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </header>
       <main className="mx-auto max-w-7xl px-4 sm:px-6 py-8">{children}</main>
       <footer className="border-t border-white/10 py-6 text-center text-xs text-white/40">
-        پنل مدیریت آواهاب ایونتس — فاز ۵
+        پنل مدیریت آواهاب ایونتس — فاز ۶
       </footer>
     </div>
   );

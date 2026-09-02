@@ -4,7 +4,7 @@
 
 import { useState, useTransition } from "react";
 import { Loader2, UserX } from "lucide-react";
-import { cancelRegistrationAction } from "@/app/events/[slug]/register/actions";
+import { cancelRegistrationAction } from "@/app/(site)/events/[slug]/register/actions";
 
 export function CancelRegistrationButton({
   registrationId,

@@ -2,9 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Vazirmatn } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { SiteHeader } from "@/components/avahub/header";
-import { SiteFooter } from "@/components/avahub/footer";
-import { BottomNav } from "@/components/avahub/bottom-nav";
 
 const vazir = Vazirmatn({
   variable: "--font-vazir",
@@ -106,10 +103,8 @@ export default function RootLayout({
       <body
         className={`${vazir.variable} flex min-h-screen flex-col font-sans antialiased bg-background text-foreground`}
       >
-        <SiteHeader />
-        <main className="flex-1">{children}</main>
-        <SiteFooter />
-        <BottomNav />
+        {/* هدر/فوتر در گروه مسیر (site)/layout.tsx است — پنل ادمین بیرون آن، بدون هدر تکراری (C1) */}
+        {children}
         <Toaster />
         <script
           type="application/ld+json"

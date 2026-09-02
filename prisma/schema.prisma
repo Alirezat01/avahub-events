@@ -226,3 +226,54 @@ model Admin {
 
   @@map("admins")
 }
+
+// ─────────────────────────── Enums فاز ۶ ───────────────────────────
+
+enum PostStatus {
+  DRAFT      /// پیش‌نویس — فقط ادمین می‌بیند
+  PUBLISHED  /// منتشر شده — در مجله نمایش داده می‌شود
+}
+
+// ─────────────────────── 9. journal_posts (مجله آواهاب) ───────────────────────
+// فاز ۶ — موتور مجله: ادمین می‌نویسد، سایت منتشر می‌کند
+
+model JournalPost {
+  id              String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug            String     @unique
+  title           String
+  excerpt         String?    /// خلاصهٔ کارت مجله
+  content         String     @default("") /// متن مقاله (Markdown)
+  coverImage      String?    /// کاور (URL از Media Manager)
+  icon            String?    /// ایموجی کاور جایگزین (وقتی عکس نیست)
+  gradient        String?    /// کلاس گرادیان کاور جایگزین
+  tags            String[]   @default([])
+  status          PostStatus @default(DRAFT)
+  publishedAt     DateTime?  /// تاریخ انتشار (نمایش عمومی)
+  authorName      String?
+  metaTitle       String?    /// SEO
+  metaDescription String?    /// SEO
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @default(now()) @updatedAt
+
+  @@index([status, publishedAt])
+  @@map("journal_posts")
+}
+
+// ─────────────────────── 10. portfolio_items (نمونه‌کارها) ───────────────────────
+// فاز ۶ — نمونه‌کارهای واقعی با عکس، از پنل مدیریت
+
+model PortfolioItem {
+  id          String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  title       String
+  tag         String?  /// برچسب روی عکس — مثل «همایش»
+  description String?  /// توضیح اختیاری
+  coverImage  String   /// عکس (URL از Media Manager)
+  link        String?  /// لینک اختیاری (اینستاگرام/گزارش رویداد)
+  sortOrder   Int      @default(0) /// ترتیب نمایش — کوچک‌تر اول
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now()) @updatedAt
+
+  @@index([isActive, sortOrder])
+  @@map("portfolio_items")
+}
