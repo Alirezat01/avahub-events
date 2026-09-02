@@ -147,6 +147,13 @@ export default async function AdminDashboardPage() {
                         >
                           ویرایش
                         </Link>
+                        <Link
+                          href={`/admin/events/${e.id}#qr`}
+                          title="کد QR ثبت‌نام برای پوستر و چاپ"
+                          className="rounded-lg border border-[#d4af37]/40 bg-[#d4af37]/10 px-3 py-1.5 text-xs font-bold text-[#d4af37] hover:bg-[#d4af37]/20 transition"
+                        >
+                          QR
+                        </Link>
                       </div>
                     </td>
                   </tr>

@@ -10,6 +10,8 @@ import {
   registrationLabel,
   STATUS_BADGE_CLASS,
 } from "@/lib/avahub/admin-data";
+import { getSiteOrigin } from "@/lib/avahub/pass";
+import { QrCopyLink } from "@/components/avahub/qr-copy-link";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -39,10 +41,11 @@ export default async function AdminEventPage({
   });
   if (!ev) notFound();
 
-  const [counts, registrants, waitlist] = await Promise.all([
+  const [counts, registrants, waitlist, origin] = await Promise.all([
     eventCounts(id),
     eventRegistrants(id),
     eventWaitlist(id),
+    getSiteOrigin(),
   ]);
 
   const active = ev.status === "PUBLISHED";
@@ -50,6 +53,8 @@ export default async function AdminEventPage({
     sp.created === "1" ? "رویداد با موفقیت ساخته شد." : sp.updated === "1" ? "تغییرات ذخیره شد." : null;
 
   const csvBase = `/admin/events/${id}/export`;
+  const qrBase = `/admin/events/${id}/qr`;
+  const qrTarget = `${origin}/events/${ev.slug}?utm_source=qr&utm_medium=poster`;
   const exportBtn =
     "rounded-xl border border-[#d4af37]/40 bg-[#d4af37]/10 px-3.5 py-2 text-xs font-bold text-[#d4af37] hover:bg-[#d4af37]/20 transition";
 
@@ -174,6 +179,38 @@ export default async function AdminEventPage({
           <a className={exportBtn} href={`${csvBase}?status=ALL`}>
             ⬇ همه ثبت‌نامی‌ها
           </a>
+        </div>
+      </div>
+
+      {/* ⭐ کد QR ثبت‌نام — فاز ۵ب (برای پوستر و چاپ) */}
+      <div id="qr" className="scroll-mt-24 rounded-2xl border border-[#d4af37]/25 bg-[#d4af37]/[0.04] p-5">
+        <h2 className="font-bold text-[#d4af37]">کد QR ثبت‌نام (پوستر و چاپ)</h2>
+        <p className="mt-1 text-xs text-white/60 leading-6">
+          این کد را روی پوستر، بنر یا استند محل رویداد بگذارید؛ اسکن مستقیم به صفحهٔ ثبت‌نام همین
+          رویداد می‌رسد و ثبت‌نام‌های حاصل به‌صورت خودکار با منبع «qr» در آمار و خروجی CSV ثبت
+          می‌شوند. تصویر ۱۲۰۰ پیکسلی است و برای چاپ در ابعاد بزرگ کافی می‌باشد.
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-5">
+          <div className="rounded-xl bg-white p-3 shadow-lg">
+            <img
+              src={qrBase}
+              alt={`کد QR ثبت‌نام ${ev.title}`}
+              width={168}
+              height={168}
+              className="h-[168px] w-[168px]"
+            />
+          </div>
+          <div className="min-w-0 flex-1 space-y-3">
+            <div className="rounded-xl border border-white/10 bg-[#0a0a0f] px-3.5 py-2.5 text-xs text-white/70 break-all" dir="ltr">
+              {qrTarget}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <a className={exportBtn} href={`${qrBase}?dl=1`}>
+                ⬇ دانلود PNG (۱۲۰۰px — مخصوص چاپ)
+              </a>
+              <QrCopyLink url={qrTarget} />
+            </div>
+          </div>
         </div>
       </div>
 
