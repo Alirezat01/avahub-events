@@ -7,7 +7,6 @@ import { SERVICES, getService } from "@/lib/avahub/services";
 import { PageHero } from "@/components/avahub/page-hero";
 import { Reveal } from "@/components/avahub/reveal";
 import { FaqList } from "@/components/avahub/faq";
-import { CtaBanner } from "@/components/avahub/sections";
 
 const SITE_URL = "https://www.avahubevents.com";
 
@@ -232,7 +231,6 @@ export default async function ServiceDetailPage({ params }: Props) {
         </div>
       </section>
 
-      <CtaBanner />
     </>
   );
 }

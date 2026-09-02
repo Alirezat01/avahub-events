@@ -12,14 +12,6 @@ import {
 } from "framer-motion";
 import { ChevronDown, Play, X } from "lucide-react";
 import { AmbientParticles } from "./particles";
-import { CountUp } from "./count-up";
-
-const STATS = [
-  { value: 650, prefix: "+", label: "رویداد برگزار شده" },
-  { value: 120, prefix: "+", suffix: "K", label: "تبلیغ موفق" },
-  { value: 98, suffix: "٪", label: "رضایت کاربران" },
-  { value: 210, prefix: "+", label: "برند و سازمان" },
-];
 
 const easeOut = [0.22, 1, 0.36, 1] as const;
 
@@ -77,7 +69,7 @@ export function Hero() {
 
       {/* ── Main hero grid ── */}
       <div className="relative z-10 mx-auto grid w-full max-w-7xl flex-1 items-center gap-10 px-4 pb-10 pt-28 sm:px-6 md:pt-32 lg:grid-cols-2 lg:gap-4">
-        {/* Floating golden triangle — first column → renders on the RIGHT (RTL) */}
+        {/* Floating golden logo — first column → renders on the RIGHT (RTL) */}
         <div className="relative order-2 hidden justify-center lg:order-1 lg:flex">
           <motion.div
             {...anim({
@@ -107,16 +99,16 @@ export function Hero() {
                       animate: { opacity: [0.45, 0.85, 0.45], scale: [1, 1.15, 1] },
                       transition: { duration: 3.6, repeat: Infinity, ease: "easeInOut" },
                     })}
-                className="absolute inset-6 rounded-full bg-[radial-gradient(circle,rgba(232,207,122,0.4),rgba(212,175,55,0.14)_45%,transparent_70%)] blur-2xl"
+                className="absolute inset-8 rounded-full bg-[radial-gradient(circle,rgba(232,207,122,0.4),rgba(212,175,55,0.14)_45%,transparent_70%)] blur-2xl"
               />
               <Image
-                src="/images/hero-triangle-alpha.png"
-                alt="لوگوی سه‌بعدی طلایی آواهاب"
-                width={560}
-                height={560}
+                src="/images/logo-gold.png"
+                alt="لوگوی طلایی آواهاب ایونتس"
+                width={657}
+                height={625}
                 priority
-                sizes="(min-width: 1280px) 480px, 40vw"
-                className="relative w-[340px] xl:w-[460px] drop-shadow-[0_0_45px_rgba(212,175,55,0.35)]"
+                sizes="(min-width: 1280px) 440px, 36vw"
+                className="relative w-[300px] xl:w-[400px] drop-shadow-[0_0_45px_rgba(212,175,55,0.35)]"
               />
             </motion.div>
           </motion.div>
@@ -149,7 +141,7 @@ export function Hero() {
             className="mb-5 text-[11px] font-bold tracking-[0.35em] text-gold-soft/90 sm:text-xs"
             dir="ltr"
           >
-            DIGITAL EVENT &amp; PROMOTION PLATFORM
+            EVENT &amp; PROMOTION PLATFORM
           </motion.p>
 
           <motion.h1
@@ -163,9 +155,9 @@ export function Hero() {
                 })}
             className="text-4xl font-black leading-[1.35] sm:text-5xl md:text-6xl xl:text-[4.2rem] xl:leading-[1.28]"
           >
-            تجربه‌های ماندگار را
+            اینجا ایده‌های شما
             <br />
-            <span className="text-gradient-gold">دیجیتالی می‌کنیم</span>
+            <span className="text-gradient-gold">تبدیل به تجربه می‌شود</span>
           </motion.h1>
 
           <motion.p
@@ -179,8 +171,8 @@ export function Hero() {
                 })}
             className="mt-6 max-w-xl text-base leading-8 text-foreground/70 sm:text-lg sm:leading-9"
           >
-            آواهاب ایونت، پلتفرم تخصصی مدیریت رویداد و پروموشن با رویکرد دیجیتال
-            خالص و تخصصی
+            آواهاب ایونت؛ از ایده تا اجرا کنار شماست — برگزاری رویداد، پروموشن
+            و برندسازی، همه در یک خانه با تیم فنی خودمان
           </motion.p>
 
           <motion.div
@@ -223,34 +215,6 @@ export function Hero() {
           </motion.div>
         </motion.div>
       </div>
-
-      {/* ── Stats row ── */}
-      <motion.dl
-        {...(reduced
-          ? {}
-          : {
-              initial: { opacity: 0, y: 34 },
-              animate: { opacity: 1, y: 0 },
-              transition: { duration: 1, delay: 0.85, ease: easeOut },
-            })}
-        className="relative z-10 mx-auto grid w-full max-w-7xl grid-cols-2 gap-y-6 px-4 pb-20 sm:px-6 md:grid-cols-4 md:pb-24"
-      >
-        {STATS.map((stat) => (
-          <div
-            key={stat.label}
-            className="flex flex-col items-center gap-1 border-white/8 px-4 md:border-l md:last:border-l-0"
-          >
-            <dd className="text-3xl font-black xl:text-4xl">
-              <span className="text-gradient-gold">
-                {stat.prefix && <span>{stat.prefix}</span>}
-                <CountUp value={stat.value} />
-                {stat.suffix && <span>{stat.suffix}</span>}
-              </span>
-            </dd>
-            <dt className="text-xs text-foreground/55 sm:text-sm">{stat.label}</dt>
-          </div>
-        ))}
-      </motion.dl>
 
       {/* scroll hint */}
       <motion.a

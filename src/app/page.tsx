@@ -1,5 +1,5 @@
 import { Hero } from "@/components/avahub/hero";
-import { ServicesSection, CtaBanner } from "@/components/avahub/sections";
+import { ServicesSection } from "@/components/avahub/sections";
 import { FeaturedEvents } from "@/components/avahub/featured-events";
 
 export default function Home() {
@@ -8,7 +8,6 @@ export default function Home() {
       <Hero />
       <ServicesSection />
       <FeaturedEvents />
-      <CtaBanner />
     </>
   );
 }

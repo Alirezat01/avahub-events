@@ -9,11 +9,11 @@ export default function NotFound() {
         className="pointer-events-none absolute left-1/2 top-1/3 size-96 -translate-x-1/2 rounded-full bg-purple/15 blur-[120px]"
       />
       <Image
-        src="/images/hero-triangle-alpha.png"
+        src="/images/logo-gold.png"
         alt=""
-        width={280}
-        height={280}
-        className="relative w-48 opacity-90 sm:w-60"
+        width={657}
+        height={625}
+        className="relative w-40 opacity-90 sm:w-48"
         aria-hidden="true"
       />
       <h1 className="mt-6 text-6xl font-black text-gradient-gold sm:text-7xl">۴۰۴</h1>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { PageHero } from "@/components/avahub/page-hero";
 import { EventExplorer } from "@/components/avahub/event-explorer";
-import { CtaBanner } from "@/components/avahub/sections";
 import { getUpcomingPublishedEvents, getActiveCategories } from "@/lib/avahub/events-db";
 
 export const dynamic = "force-dynamic";
@@ -53,7 +52,6 @@ export default async function EventsPage() {
           </p>
         )}
       </section>
-      <CtaBanner />
     </>
   );
 }

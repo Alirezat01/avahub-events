@@ -4,12 +4,11 @@ import { Award, Layers, MapPin } from "lucide-react";
 import { PageHero } from "@/components/avahub/page-hero";
 import { Reveal } from "@/components/avahub/reveal";
 import { CountUp } from "@/components/avahub/count-up";
-import { CtaBanner } from "@/components/avahub/sections";
 
 export const metadata: Metadata = {
-  title: "درباره آواهاب ایونتس | میراث آوای شباهنگ، رویکرد دیجیتال",
+  title: "درباره آواهاب ایونتس | میراث آوای شباهنگ، اجرای حرفه‌ای رویداد",
   description:
-    "آواهاب ایونتس از ۱۴۰۰ با تکیه بر میراث ۴۰ ساله مؤسسه آوای شباهنگ، رویداد و تبلیغات را با رویکرد دیجیتال اجرا می‌کند؛ تیم فنی داخلی، خدمات یکپارچه و پوشش چندشهری.",
+    "آواهاب ایونتس از ۱۴۰۰ با تکیه بر میراث ۴۰ ساله مؤسسه آوای شباهنگ، رویداد و تبلیغات را با تیم فنی داخلی، خدمات یکپارچه و پوشش چندشهری اجرا می‌کند.",
   alternates: { canonical: "/about" },
 };
 
@@ -50,8 +49,8 @@ export default function AboutPage() {
     <>
       <PageHero
         eyebrow="ABOUT AVAHUB"
-        title="ما تجربه‌ها را می‌سازیم؛ دیجیتال می‌کنیم"
-        sub="آواهاب ایونتس، پلتفرم دیجیتال رویداد و پروموشن؛ وارث تجربه چنددهه‌ای آوای شباهنگ در دنیای فرهنگ و هنر."
+        title="ما ایده‌ها را به تجربه تبدیل می‌کنیم"
+        sub="آواهاب ایونتس، خانهٔ رویداد و پروموشن؛ وارث تجربه چنددهه‌ای آوای شباهنگ در دنیای فرهنگ و هنر."
       />
 
       {/* Story */}
@@ -79,12 +78,13 @@ export default function AboutPage() {
           <Reveal delay={0.12}>
             <h2 className="text-2xl font-black leading-relaxed sm:text-3xl">
               از دل <span className="text-gradient-gold">آوای شباهنگ</span>؛ برای
-              نسل دیجیتال
+              نسل امروز
             </h2>
             <p className="mt-5 text-[15px] leading-9 text-foreground/65">
               مؤسسه فرهنگی هنری آوای شباهنگ بیش از چهار دهه است در برگزاری
               رویدادهای فرهنگی و هنری نامی مطمئن است. آواهاب ایونتس از سال ۱۴۰۰ با
-              همان ریشه‌ها اما با رویکردی تازه متولد شد: دیجیتال خالص. ما
+              همان ریشه‌ها اما با رویکردی تازه متولد شد: رویدادی که بعد از
+              شب اجرا هم ادامه دارد. ما
               باور داریم رویداد با تجربه زنده تمام نمی‌شود؛ با داده، محتوا و
               مخاطبی ادامه پیدا می‌کند که بعد از رویداد هم همراه شما می‌ماند.
             </p>
@@ -171,7 +171,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <CtaBanner />
     </>
   );
 }

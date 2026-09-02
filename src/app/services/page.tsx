@@ -6,12 +6,11 @@ import { SERVICES } from "@/lib/avahub/services";
 import { PageHero } from "@/components/avahub/page-hero";
 import { Reveal } from "@/components/avahub/reveal";
 import { TiltCard } from "@/components/avahub/tilt-card";
-import { CtaBanner } from "@/components/avahub/sections";
 
 export const metadata: Metadata = {
   title: "خدمات آواهاب ایونتس | از ایده تا اجرا و رشد",
   description:
-    "شش خدمت تخصصی آواهاب ایونتس: تبلیغات دیجیتال، مدیریت رویداد، تولید محتوا، تبلیغات در شبکه‌های اجتماعی، مشاوره و استراتژی، برندسازی و گرافیک.",
+    "شش خدمت تخصصی آواهاب ایونتس: استودیو تبلیغات نوین، خانهٔ رویدادهای بزرگ، آتلیهٔ محتوا، فرماندهی شبکه‌های اجتماعی، اتاق استراتژی، کارگاه برند و گرافیک.",
   alternates: { canonical: "/services" },
 };
 
@@ -96,7 +95,6 @@ export default function ServicesPage() {
         </div>
       </section>
 
-      <CtaBanner />
     </>
   );
 }

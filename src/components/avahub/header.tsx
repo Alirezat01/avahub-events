@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Menu, X } from "lucide-react";
-import { AvahubLogo } from "./logo";
 import { UserMenu } from "./user-menu";
 
 const NAV_ITEMS = [
@@ -42,33 +42,43 @@ export function SiteHeader() {
         }`}
       >
         <div className="mx-auto flex h-12 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
-          {/* Brand */}
+          {/* Brand — لوگوی واقعی آواهاب */}
           <Link href="/" aria-label="آواهاب ایونتس — خانه" className="flex shrink-0 items-center gap-2">
-            <AvahubLogo />
+            <Image
+              src="/images/logo-full.png"
+              alt="آواهاب ایونتس"
+              width={657}
+              height={625}
+              priority
+              className="h-12 w-auto"
+            />
           </Link>
 
-          {/* Desktop nav */}
-          <nav aria-label="ناوبری اصلی" className="hidden items-center gap-6 lg:flex xl:gap-7">
-            {NAV_ITEMS.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`relative text-sm transition-colors ${
-                  isActive(item.href)
-                    ? "text-gold"
-                    : "text-foreground/75 hover:text-primary"
-                }`}
-              >
-                {item.label}
-                {isActive(item.href) && (
-                  <motion.span
-                    layoutId="nav-underline"
-                    className="absolute -bottom-1.5 inset-x-0 h-px gold-line"
-                    transition={{ type: "spring", stiffness: 380, damping: 32 }}
-                  />
-                )}
-              </Link>
-            ))}
+          {/* Desktop nav — دکمه‌های واقعی */}
+          <nav aria-label="ناوبری اصلی" className="hidden items-center gap-2 lg:flex">
+            {NAV_ITEMS.map((item) => {
+              const active = isActive(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`relative inline-flex items-center rounded-full border px-3.5 py-1.5 text-[13px] font-medium backdrop-blur transition-all duration-300 xl:px-4 ${
+                    active
+                      ? "border-gold/60 bg-gold/15 text-gold shadow-[0_0_22px_rgba(212,175,55,0.28)]"
+                      : "border-white/10 bg-white/[0.04] text-foreground/80 hover:-translate-y-0.5 hover:border-gold/45 hover:bg-gold/10 hover:text-gold hover:shadow-[0_0_18px_rgba(212,175,55,0.22)]"
+                  }`}
+                >
+                  {item.label}
+                  {active && (
+                    <motion.span
+                      layoutId="nav-dot"
+                      className="absolute -top-1 left-1/2 size-1.5 -translate-x-1/2 rounded-full bg-gold shadow-[0_0_8px_rgba(212,175,55,0.9)]"
+                      transition={{ type: "spring", stiffness: 380, damping: 32 }}
+                    />
+                  )}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* CTA — منوی واقعی کاربر (فاز ۲) */}
@@ -108,7 +118,13 @@ export function SiteHeader() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="mb-8 flex items-center justify-between">
-                <AvahubLogo />
+                <Image
+                  src="/images/logo-full.png"
+                  alt="آواهاب ایونتس"
+                  width={657}
+                  height={625}
+                  className="h-12 w-auto"
+                />
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
@@ -118,21 +134,24 @@ export function SiteHeader() {
                   <X className="size-4" aria-hidden="true" />
                 </button>
               </div>
-              <nav aria-label="ناوبری موبایل" className="flex flex-col gap-1">
-                {NAV_ITEMS.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={() => setOpen(false)}
-                    className={`rounded-lg px-3 py-3 text-base transition-colors ${
-                      isActive(item.href)
-                        ? "bg-gold/10 text-gold"
-                        : "text-foreground/85 hover:bg-accent hover:text-foreground"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+              <nav aria-label="ناوبری موبایل" className="flex flex-col gap-2">
+                {NAV_ITEMS.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setOpen(false)}
+                      className={`rounded-xl border px-4 py-3 text-base font-medium transition-all ${
+                        active
+                          ? "border-gold/50 bg-gold/10 text-gold"
+                          : "border-white/10 bg-white/[0.04] text-foreground/85 hover:border-gold/40 hover:bg-gold/5 hover:text-gold"
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
               </nav>
               <UserMenu variant="mobile" />
             </motion.div>

@@ -31,7 +31,7 @@ export const SAMPLE_EVENTS: SampleEvent[] = [
   },
   {
     slug: "digital-marketing-summit",
-    title: "همایش دیجیتال مارکتینگ",
+    title: "همایش بازاریابی و رشد کسب‌وکار",
     category: "همایش",
     day: "۰۳",
     month: "مهر",

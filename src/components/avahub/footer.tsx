@@ -1,6 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Instagram, Facebook, Phone, ExternalLink, MapPin } from "lucide-react";
-import { AvahubLogo } from "./logo";
 import { SERVICES } from "@/lib/avahub/services";
 
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -45,14 +45,20 @@ export function SiteFooter() {
       <div aria-hidden="true" className="absolute inset-x-0 top-0 h-px gold-line" />
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
-          {/* Brand */}
+          {/* Brand — لوگوی واقعی آواهاب */}
           <div>
             <Link href="/" aria-label="آواهاب ایونتس — خانه">
-              <AvahubLogo />
+              <Image
+                src="/images/logo-full.png"
+                alt="آواهاب ایونتس"
+                width={657}
+                height={625}
+                className="h-20 w-auto"
+              />
             </Link>
             <p className="mt-5 max-w-xs text-sm leading-7 text-foreground/55">
-              پلتفرم دیجیتال رویداد، پروموشن و مخاطبان — زیرمجموعه مؤسسه فرهنگی
-              هنری آوای شباهنگ. تجربه‌های ماندگار را دیجیتالی می‌کنیم.
+              زیرمجموعه مؤسسه فرهنگی هنری آوای شباهنگ — اینجا ایده‌های شما
+              تبدیل به تجربه می‌شود.
             </p>
             <div className="mt-5 flex items-center gap-3">
               {SOCIALS.map((social) => (
@@ -158,7 +164,7 @@ export function SiteFooter() {
           </p>
           <p className="flex items-center gap-1.5">
             <span aria-hidden="true" className="inline-block size-1.5 rounded-full bg-gold" />
-            تجربه‌های ماندگار را دیجیتالی می‌کنیم
+            اینجا ایده‌های شما تبدیل به تجربه می‌شود
           </p>
         </div>
       </div>

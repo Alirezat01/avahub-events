@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { ArrowLeft, CheckCircle2, Loader2, Mail, ShieldQuestion } from "lucide-react";
-import { AvahubLogo } from "@/components/avahub/logo";
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
 
 // ─────────────────────────────────────────────────────────────
@@ -147,7 +147,14 @@ function LoginCard() {
 
       <div className="relative text-center">
         <Link href="/" aria-label="آواهاب ایونتس — خانه" className="inline-block">
-          <AvahubLogo />
+          <Image
+            src="/images/logo-full.png"
+            alt="آواهاب ایونتس"
+            width={657}
+            height={625}
+            priority
+            className="mx-auto h-20 w-auto"
+          />
         </Link>
         <h1 className="mt-6 text-xl font-black">ورود | ثبت‌نام</h1>
         <p className="mt-2 text-sm leading-7 text-foreground/60">

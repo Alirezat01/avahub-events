@@ -2,12 +2,11 @@ import type { Metadata } from "next";
 import { BookOpen, Clock3 } from "lucide-react";
 import { PageHero } from "@/components/avahub/page-hero";
 import { Reveal } from "@/components/avahub/reveal";
-import { CtaBanner } from "@/components/avahub/sections";
 
 export const metadata: Metadata = {
   title: "مجله آواهاب | آموزش و تحلیل دنیای رویداد و تبلیغات",
   description:
-    "مجله آواهاب ایونتس؛ مقالات آموزشی و تحلیلی درباره برگزاری رویداد، تبلیغات دیجیتال، برندسازی و تولید محتوا.",
+    "مجله آواهاب ایونتس؛ مقالات آموزشی و تحلیلی درباره برگزاری رویداد، تبلیغات، برندسازی و تولید محتوا.",
   alternates: { canonical: "/journal" },
 };
 
@@ -84,7 +83,6 @@ export default function JournalPage() {
           </div>
         </Reveal>
       </section>
-      <CtaBanner />
     </>
   );
 }

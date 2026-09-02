@@ -3,7 +3,6 @@ import Image from "next/image";
 import { Camera } from "lucide-react";
 import { PageHero } from "@/components/avahub/page-hero";
 import { Reveal } from "@/components/avahub/reveal";
-import { CtaBanner } from "@/components/avahub/sections";
 
 export const metadata: Metadata = {
   title: "نمونه‌کارها | همایش، سمینار و رویدادهای برند",
@@ -68,7 +67,6 @@ export default function PortfolioPage() {
           </div>
         </Reveal>
       </section>
-      <CtaBanner />
     </>
   );
 }
