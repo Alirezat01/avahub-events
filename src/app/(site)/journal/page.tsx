@@ -9,7 +9,7 @@ import { getPublishedPosts } from "@/lib/avahub/journal";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "مجله آواهاب | آموزش و تحلیل دنیای رویداد و تبلیغات",
+  title: "مجله آواهاب | آموزش و تحلیل دنیای رویداد",
   description:
     "مجله آواهاب ایونتس؛ مقالات آموزشی و تحلیلی درباره برگزاری رویداد، تبلیغات، برندسازی و تولید محتوا.",
   alternates: { canonical: "/journal" },

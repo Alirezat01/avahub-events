@@ -25,6 +25,8 @@ import {
 } from "@/lib/avahub/registration";
 import { createClient } from "@/lib/supabase/server";
 import { db } from "@/lib/db";
+import { JsonLd } from "@/components/avahub/json-ld";
+import { SITE_URL, absoluteImageUrl } from "@/lib/avahub/site";
 import {
   formatJalaliDate,
   formatJalaliShort,
@@ -94,8 +96,48 @@ export default async function EventDetailPage({ params }: Props) {
   const startsAt = event.startsAt;
   const endsAt = event.endsAt;
 
+  // اسکیمای Event — فاز د (SEO): نتیجهٔ غنی گوگل با تاریخ، مکان و ظرفیت
+  const coverUrl = absoluteImageUrl(event.coverImage);
+  const eventJsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    name: event.title,
+    description: event.metaDescription ?? event.summary ?? undefined,
+    image: coverUrl ? [coverUrl] : undefined,
+    startDate: startsAt.toISOString(),
+    endDate: endsAt?.toISOString(),
+    eventStatus: "https://schema.org/EventScheduled",
+    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+    location: {
+      "@type": "Place",
+      name: event.venueName ?? event.venueCity,
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: event.venueAddress ?? undefined,
+        addressLocality: event.venueCity,
+        addressCountry: "IR",
+      },
+    },
+    organizer: {
+      "@type": "Organization",
+      name: "آواهاب ایونتس",
+      url: SITE_URL,
+    },
+    offers: {
+      "@type": "Offer",
+      name: "ثبت‌حضور رایگان",
+      price: "0",
+      priceCurrency: "IRR",
+      url: `${SITE_URL}/events/${event.slug}/register`,
+      availability: capacity.full
+        ? "https://schema.org/SoldOut"
+        : "https://schema.org/InStock",
+    },
+  };
+
   return (
     <main className="relative min-h-[100svh] overflow-hidden pb-24 pt-28">
+      <JsonLd data={eventJsonLd} />
       {/* پس‌زمینه محیطی */}
       <div
         aria-hidden="true"

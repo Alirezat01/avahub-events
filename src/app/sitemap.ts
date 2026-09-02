@@ -1,8 +1,13 @@
 import type { MetadataRoute } from "next";
 import { SERVICES } from "@/lib/avahub/services";
 import { getUpcomingPublishedEvents } from "@/lib/avahub/events-db";
+import { SITE_URL } from "@/lib/avahub/site";
+import { db } from "@/lib/db";
 
-const BASE = "https://www.avahubevents.com";
+const BASE = SITE_URL;
+
+// sitemap باید همیشه تازه باشد — ایونت/مقالهٔ جدید بدون redeploy ظاهر شود (فاز د)
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
@@ -39,5 +44,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     eventRoutes = [];
   }
 
-  return [...staticRoutes, ...serviceRoutes, ...eventRoutes];
+  // مقالات منتشرشدهٔ مجله — فاز د (SEO)
+  let journalRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const posts = await db.journalPost.findMany({
+      where: { status: "PUBLISHED" },
+      select: { slug: true, updatedAt: true },
+      orderBy: { updatedAt: "desc" },
+    });
+    journalRoutes = posts.map((post) => ({
+      url: `${BASE}/journal/${post.slug}`,
+      lastModified: post.updatedAt,
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    }));
+  } catch {
+    journalRoutes = [];
+  }
+
+  return [...staticRoutes, ...serviceRoutes, ...eventRoutes, ...journalRoutes];
 }

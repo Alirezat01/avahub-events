@@ -6,6 +6,8 @@ import Markdown from "react-markdown";
 import { ArrowRight, Clock3, PenLine } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatJalaliShort } from "@/lib/avahub/jalali";
+import { JsonLd } from "@/components/avahub/json-ld";
+import { SITE_URL, absoluteImageUrl } from "@/lib/avahub/site";
 
 // ─────────────────────────────────────────────────────────────
 // صفحهٔ مقالهٔ مجله — فاز ۶
@@ -55,8 +57,37 @@ export default async function JournalArticlePage({
   const post = await getPost(slug);
   if (!post) notFound();
 
+  // اسکیمای Article — فاز د (SEO)
+  const coverUrl = absoluteImageUrl(post.coverImage);
+  const articleJsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: post.title,
+    description: post.metaDescription || post.excerpt || undefined,
+    image: coverUrl ? [coverUrl] : undefined,
+    datePublished: post.publishedAt?.toISOString(),
+    dateModified: post.updatedAt.toISOString(),
+    inLanguage: "fa-IR",
+    author: {
+      "@type": "Organization",
+      name: post.authorName || "آواهاب ایونتس",
+      url: SITE_URL,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "آواهاب ایونتس",
+      url: SITE_URL,
+      logo: {
+        "@type": "ImageObject",
+        url: `${SITE_URL}/images/logo-full.png`,
+      },
+    },
+    mainEntityOfPage: `${SITE_URL}/journal/${post.slug}`,
+  };
+
   return (
     <>
+      <JsonLd data={articleJsonLd} />
       {/* هدر مقاله */}
       <section className="relative overflow-hidden border-b border-border">
         <div

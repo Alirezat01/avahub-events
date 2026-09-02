@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import { Vazirmatn } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
+import { SITE_URL } from "@/lib/avahub/site";
 
 const vazir = Vazirmatn({
   variable: "--font-vazir",
@@ -9,10 +11,14 @@ const vazir = Vazirmatn({
   display: "swap",
 });
 
-const SITE_URL = "https://www.avahubevents.com";
+// تأیید مالکیت Google Search Console — اگر NEXT_PUBLIC_GOOGLE_VERIFICATION ست شود، متا تگ رندر می‌شود (فاز د)
+const GOOGLE_VERIFICATION = process.env.NEXT_PUBLIC_GOOGLE_VERIFICATION;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  ...(GOOGLE_VERIFICATION
+    ? { verification: { google: GOOGLE_VERIFICATION } }
+    : {}),
   title: {
     default: "آواهاب ایونتس | رویداد، پروموشن و برندسازی",
     template: "%s | آواهاب ایونتس",
@@ -106,6 +112,22 @@ export default function RootLayout({
         {/* هدر/فوتر در گروه مسیر (site)/layout.tsx است — پنل ادمین بیرون آن، بدون هدر تکراری (C1) */}
         {children}
         <Toaster />
+
+        {/* Google Analytics 4 — فقط وقتی NEXT_PUBLIC_GA_ID در ورسل ست شده باشد لود می‌شود (فاز د) */}
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${process.env.NEXT_PUBLIC_GA_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script id="ga4-init" strategy="afterInteractive">
+              {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', '${process.env.NEXT_PUBLIC_GA_ID}', { anonymize_ip: true });`}
+            </Script>
+          </>
+        )}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
