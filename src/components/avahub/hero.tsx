@@ -35,7 +35,8 @@ export function Hero() {
 
   const onMouseMove = (e: MouseEvent<HTMLElement>) => {
     if (reduced || !sectionRef.current) return;
-    if (e.pointerType && e.pointerType !== "mouse") return;
+    const pt = (e as unknown as { pointerType?: string }).pointerType;
+    if (pt && pt !== "mouse") return;
     const rect = sectionRef.current.getBoundingClientRect();
     nx.set(((e.clientX - rect.left) / rect.width) * 2 - 1);
     ny.set(((e.clientY - rect.top) / rect.height) * 2 - 1);

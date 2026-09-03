@@ -15,6 +15,7 @@ export type PortfolioView = {
 export type PortfolioCase = PortfolioView & {
   id: string;
   slug: string | null;
+  link: string | null;
   description: string | null;
   client: string | null;
   projectType: string | null;
@@ -74,6 +75,7 @@ export async function getPortfolioCases(): Promise<{
       title: true,
       tag: true,
       coverImage: true,
+      link: true,
       slug: true,
       description: true,
       client: true,
@@ -96,6 +98,7 @@ export async function getPortfolioCases(): Promise<{
     image: r.coverImage,
     title: r.title,
     tag: r.tag ?? "نمونه‌کار",
+    link: r.link,
     slug: r.slug,
     description: r.description,
     client: r.client,
@@ -125,6 +128,7 @@ export async function getPortfolioCaseBySlug(slug: string): Promise<PortfolioCas
         title: true,
         tag: true,
         coverImage: true,
+        link: true,
         slug: true,
         description: true,
         client: true,
@@ -146,6 +150,7 @@ export async function getPortfolioCaseBySlug(slug: string): Promise<PortfolioCas
     image: row.coverImage,
     title: row.title,
     tag: row.tag ?? "نمونه‌کار",
+    link: row.link,
     slug: row.slug,
     description: row.description,
     client: row.client,

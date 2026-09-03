@@ -52,6 +52,32 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 نمونه‌کارها
               </Link>
               <Link
+                href="/admin/leads"
+                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
+              >
+                سرنخ‌ها
+              </Link>
+              <Link
+                href="/admin/campaigns"
+                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
+              >
+                کمپین‌ها
+              </Link>
+              <Link
+                href="/admin/redirects"
+                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
+              >
+                ریدایرکت‌ها
+              </Link>
+              {admin.role === "SUPER_ADMIN" && (
+                <Link
+                  href="/admin/activity"
+                  className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
+                >
+                  فعالیت
+                </Link>
+              )}
+              <Link
                 href="/admin/media"
                 className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
               >
@@ -78,6 +104,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               title={admin.email}
             >
               {admin.fullName ?? admin.email}
+            </span>
+            <span
+              className="hidden lg:inline-block rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-[10px] text-white/60"
+              title="نقش شما در پنل"
+            >
+              {admin.role === "SUPER_ADMIN" ? "مدیر ارشد" : admin.role === "EVENT_MANAGER" ? "مدیر رویداد" : "کارمند"}
             </span>
           </div>
         </div>

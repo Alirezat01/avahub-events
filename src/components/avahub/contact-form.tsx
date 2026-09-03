@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { Send } from "lucide-react";
 import { SERVICES } from "@/lib/avahub/services";
+import { submitLead } from "@/app/(site)/contact/actions";
 
 const WHATSAPP_NUMBER = "989351077947";
 
 /**
- * Contact form — composes a WhatsApp message (works today, no backend needed).
- * Will be connected to Supabase + Resend email in the next phases.
+ * Contact form — فاز G: اول سرنخ در دیتابیس ذخیره می‌شود،
+ * بعد واتساپ باز می‌شود (اگر دیتابیس در دسترس نباشد واتساپ همچنان کار می‌کند)
  */
 export function ContactForm() {
   const [name, setName] = useState("");
@@ -16,14 +17,24 @@ export function ContactForm() {
   const [topic, setTopic] = useState("مشاوره رایگان");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
 
-  const submit = (e: React.FormEvent) => {
+  const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim().length < 2 || phone.trim().length < 8 || message.trim().length < 5) {
       setError("لطفاً نام، شماره تماس و متن پیام را کامل وارد کنید.");
       return;
     }
     setError("");
+    setSending(true);
+    // ۱) ذخیرهٔ سرنخ در CRM (best-effort — هیچ‌وقت مسیر واتساپ را نمی‌بندد)
+    try {
+      await submitLead({ name, phone, topic, message });
+    } catch {
+      // بی‌صدا — واتساپ جایگزین کامل است
+    }
+    setSending(false);
+    // ۲) ادامهٔ مسیر قبلی: باز شدن واتساپ با متن آماده
     const text = [
       `سلام آواهاب 👋`,
       `نام: ${name.trim()}`,
@@ -115,10 +126,11 @@ export function ContactForm() {
       )}
       <button
         type="submit"
-        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-black text-primary-foreground shadow-[0_0_30px_rgba(212,175,55,0.25)] transition-all hover:shadow-[0_0_50px_rgba(212,175,55,0.45)] sm:w-auto"
+        disabled={sending}
+        className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-black text-primary-foreground shadow-[0_0_30px_rgba(212,175,55,0.25)] transition-all hover:shadow-[0_0_50px_rgba(212,175,55,0.45)] disabled:opacity-60 sm:w-auto"
       >
         <Send className="size-4" aria-hidden="true" />
-        ارسال پیام با واتساپ
+        {sending ? "در حال ارسال…" : "ارسال پیام با واتساپ"}
       </button>
     </form>
   );

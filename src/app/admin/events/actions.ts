@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { assertAdmin } from "@/lib/avahub/admin";
+import { logActivity } from "@/lib/avahub/activity";
 import type { EventStatus } from "@prisma/client";
 
 // ─────────────────────────────────────────────────────────────
@@ -266,7 +267,7 @@ export async function setEventStatusAction(fd: FormData): Promise<void> {
 
 // ── فاز E: کلون ایونت (برای رویدادهای مشابه تکرارشونده) ──
 export async function cloneEventAction(fd: FormData): Promise<void> {
-  await assertAdmin();
+  const session = await assertAdmin();
   const id = String(fd.get("id") ?? "");
   if (!UUID_RE.test(id)) return;
 
@@ -288,7 +289,7 @@ export async function cloneEventAction(fd: FormData): Promise<void> {
     ? new Date(src.endsAt.getTime() + 60 * 24 * 60 * 60 * 1000)
     : null;
 
-  await db.event.create({
+  const created = await db.event.create({
     data: {
       slug,
       title: `${src.title} (کپی)`,
@@ -315,6 +316,15 @@ export async function cloneEventAction(fd: FormData): Promise<void> {
       isOnline: src.isOnline,
     },
     select: { id: true },
+  });
+
+  await logActivity({
+    adminProfileId: session.profileId,
+    adminName: session.fullName ?? session.email,
+    action: "EVENT_CLONE",
+    entity: "event",
+    entityId: created.id,
+    detail: `کپی از «${src.title}»`,
   });
 
   revalidatePath("/admin");

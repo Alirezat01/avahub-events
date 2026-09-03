@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { adminEventRows, globalCounts, fmtFa } from "@/lib/avahub/admin-data";
+import { adminNotifications } from "@/lib/avahub/admin-notifications";
 import { EventStatus } from "@prisma/client";
 import { cloneEventAction } from "@/app/admin/events/actions";
 
@@ -28,7 +29,7 @@ export default async function AdminDashboardPage({
   searchParams: Promise<{ status?: string; city?: string; q?: string; cloned?: string }>;
 }) {
   const sp = await searchParams;
-  const [g, allRows] = await Promise.all([globalCounts(), adminEventRows()]);
+  const [g, allRows, notes] = await Promise.all([globalCounts(), adminEventRows(), adminNotifications()]);
 
   // فاز E: فیلتر وضعیت / شهر / جستجو
   const rows = allRows.filter((e) => {
@@ -62,6 +63,41 @@ export default async function AdminDashboardPage({
           </p>
         )}
       </div>
+
+      {/* اعلان‌ها — فاز G */}
+      {notes.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {notes.map((n) => {
+            const toneCls =
+              n.tone === "gold"
+                ? "border-[#d4af37]/40 bg-[#d4af37]/[0.07]"
+                : n.tone === "emerald"
+                  ? "border-emerald-500/30 bg-emerald-500/[0.07]"
+                  : n.tone === "sky"
+                    ? "border-sky-500/30 bg-sky-500/[0.07]"
+                    : "border-rose-500/30 bg-rose-500/[0.07]";
+            const textCls =
+              n.tone === "gold"
+                ? "text-[#d4af37]"
+                : n.tone === "emerald"
+                  ? "text-emerald-300"
+                  : n.tone === "sky"
+                    ? "text-sky-300"
+                    : "text-rose-300";
+            return (
+              <Link
+                key={n.title}
+                href={n.href}
+                className={`rounded-2xl border p-4 transition hover:brightness-125 ${toneCls}`}
+              >
+                <p className={`text-xs font-black ${textCls}`}>{n.title}</p>
+                <p className="mt-1.5 text-lg font-black text-white">{n.value}</p>
+                <p className="mt-1 text-[10px] text-white/40">{n.cta} ←</p>
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
       {/* فیلترها — فاز E */}
       <form className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-[#12121a] p-4" method="get">

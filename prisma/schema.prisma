@@ -295,3 +295,55 @@ model PortfolioItem {
   @@index([isActive, sortOrder])
   @@map("portfolio_items")
 }
+
+// ═══════════════ فاز G — CRM سبک، اعلان‌ها، ریدایرکت، لاگ ═══════════════
+
+enum LeadStatus {
+  NEW       /// سرنخ تازه — هنوز تماس گرفته نشده
+  CONTACTED /// تماس اول انجام شد
+  QUALIFIED /// مشتری بالقوه جدی
+  WON       /// به پروژه تبدیل شد
+  LOST      /// منصرف / بی‌پاسخ
+}
+
+model Lead {
+  id        String     @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name      String
+  phone     String
+  topic     String?    /// مشاوره رایگان | برگزاری رویداد | همکاری | …
+  message   String     @default("")
+  source    String     @default("contact") /// contact | whatsapp
+  status    LeadStatus @default(NEW)
+  adminNote String?    /// یادداشت داخلی ادمین
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @default(now()) @updatedAt
+
+  @@index([status, createdAt])
+  @@map("leads")
+}
+
+model ActivityLog {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminProfileId String?  @db.Uuid /// null = اقدام از سمت عمومی (مثلاً فرم تماس)
+  adminName      String?  /// اسنپ‌شات نام ادمین برای نمایش سریع
+  action         String   /// LEAD_NEW | LEAD_STATUS | EVENT_CLONE | REDIRECT_SAVE | …
+  entity         String   /// lead | event | redirect | journal | portfolio
+  entityId       String?
+  detail         String?
+  createdAt      DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+model Redirect {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  fromPath   String   @unique /// مسیر قدیمی — مثل /old-page
+  toPath     String   /// مقصد — مسیر داخلی یا URL کامل
+  statusCode Int      @default(301) /// 301 دائمی | 302 موقت
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+
+  @@map("redirects")
+}
