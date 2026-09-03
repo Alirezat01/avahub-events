@@ -15,6 +15,21 @@ import type { EventStatus } from "@prisma/client";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+// فاز E — هشدار سئو: تکراری بودن Meta Title/Description بین ایونت‌ها
+async function dupEventMetaWarnings(metaTitle: string | null, metaDescription: string | null, excludeId?: string): Promise<string[]> {
+  const warnings: string[] = [];
+  const not = excludeId ? { id: { not: excludeId } } : {};
+  if (metaTitle) {
+    const dup = await db.event.findFirst({ where: { metaTitle, ...not }, select: { title: true } });
+    if (dup) warnings.push(`هشدار سئو: Meta Title تکراری — در رویداد «${dup.title}» هم استفاده شده است.`);
+  }
+  if (metaDescription) {
+    const dup = await db.event.findFirst({ where: { metaDescription, ...not }, select: { title: true } });
+    if (dup) warnings.push(`هشدار سئو: Meta Description تکراری — در رویداد «${dup.title}» هم استفاده شده است.`);
+  }
+  return warnings;
+}
+
 export type EventFormState = { error?: string; fieldErrors?: Record<string, string> };
 
 const eventSchema = z.object({
@@ -41,6 +56,8 @@ const eventSchema = z.object({
   status: z.enum(["DRAFT", "PUBLISHED", "CANCELLED", "ARCHIVED"]),
   metaTitle: z.string().trim().max(120).optional().or(z.literal("")),
   metaDescription: z.string().trim().max(200).optional().or(z.literal("")),
+  eventType: z.string().trim().max(30).optional().or(z.literal("")),
+  isOnline: z.boolean().optional().default(false),
   // نکات خاص رویداد — همان که کاربر موقع ثبت‌نام می‌بیند
   hasSeating: z.boolean().optional().default(false),
   cateringNote: z.string().trim().max(300).optional().or(z.literal("")),
@@ -102,6 +119,8 @@ function readForm(fd: FormData) {
     status: fd.get("status") ?? "DRAFT",
     metaTitle: fd.get("metaTitle") ?? "",
     metaDescription: fd.get("metaDescription") ?? "",
+    eventType: fd.get("eventType") ?? "",
+    isOnline: fd.get("isOnline") === "on" || fd.get("isOnline") === "true",
     hasSeating: bool("hasSeating"),
     cateringNote: fd.get("cateringNote") ?? "",
     musicInfo: fd.get("musicInfo") ?? "",
@@ -152,6 +171,8 @@ export async function createEventAction(
       status: d.status as EventStatus,
       metaTitle: d.metaTitle || null,
       metaDescription: d.metaDescription || null,
+      eventType: d.eventType || null,
+      isOnline: d.isOnline,
       hasSeating: d.hasSeating,
       cateringNote: d.cateringNote || null,
       musicInfo: d.musicInfo || null,
@@ -213,6 +234,8 @@ export async function updateEventAction(
       status: d.status as EventStatus,
       metaTitle: d.metaTitle || null,
       metaDescription: d.metaDescription || null,
+      eventType: d.eventType || null,
+      isOnline: d.isOnline,
       hasSeating: d.hasSeating,
       cateringNote: d.cateringNote || null,
       musicInfo: d.musicInfo || null,
@@ -239,4 +262,61 @@ export async function setEventStatusAction(fd: FormData): Promise<void> {
   revalidatePath(`/admin/events/${id}`);
   revalidatePath("/events");
   revalidatePath("/");
+}
+
+// ── فاز E: کلون ایونت (برای رویدادهای مشابه تکرارشونده) ──
+export async function cloneEventAction(fd: FormData): Promise<void> {
+  await assertAdmin();
+  const id = String(fd.get("id") ?? "");
+  if (!UUID_RE.test(id)) return;
+
+  const src = await db.event.findUnique({ where: { id } });
+  if (!src) return;
+
+  // اسلاگ یکتا
+  let slug = `${src.slug}-copy`;
+  let n = 2;
+  for (;;) {
+    const exists = await db.event.findFirst({ where: { slug }, select: { id: true } });
+    if (!exists) break;
+    slug = `${src.slug}-copy-${n++}`;
+  }
+
+  // +۶۰ روز برای فرصت آماده‌سازی
+  const startsAt = new Date(src.startsAt.getTime() + 60 * 24 * 60 * 60 * 1000);
+  const endsAt = src.endsAt
+    ? new Date(src.endsAt.getTime() + 60 * 24 * 60 * 60 * 1000)
+    : null;
+
+  await db.event.create({
+    data: {
+      slug,
+      title: `${src.title} (کپی)`,
+      summary: src.summary,
+      description: src.description,
+      coverImage: src.coverImage,
+      categoryId: src.categoryId,
+      startsAt,
+      endsAt,
+      venueName: src.venueName,
+      venueAddress: src.venueAddress,
+      venueCity: src.venueCity,
+      capacity: src.capacity,
+      waitlistEnabled: src.waitlistEnabled,
+      isFeatured: false,
+      hasSeating: src.hasSeating,
+      cateringNote: src.cateringNote,
+      musicInfo: src.musicInfo,
+      specialNotes: src.specialNotes,
+      status: "DRAFT",
+      metaTitle: src.metaTitle ? `${src.metaTitle} (کپی)` : null,
+      metaDescription: src.metaDescription,
+      eventType: src.eventType,
+      isOnline: src.isOnline,
+    },
+    select: { id: true },
+  });
+
+  revalidatePath("/admin");
+  redirect("/admin?cloned=1");
 }

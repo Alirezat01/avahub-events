@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import type { PortfolioFormState } from "@/app/admin/portfolio/actions";
 import { AdminImageField } from "@/components/avahub/admin-image-field";
+import { SeoPreviewFields } from "@/components/avahub/admin-seo-preview";
 
 // ─────────────────────────────────────────────────────────────
 // فرم ساخت/ویرایش نمونه‌کار — فاز ۶
@@ -18,6 +19,17 @@ type Defaults = {
   link?: string | null;
   sortOrder?: number;
   isActive?: boolean;
+  slug?: string | null;
+  client?: string | null;
+  projectType?: string | null;
+  projectDate?: string | null;
+  servicesUsed?: string[];
+  results?: string | null;
+  gallery?: string[];
+  isFeatured?: boolean;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  altText?: string | null;
 };
 
 const inputCls =
@@ -91,6 +103,63 @@ export function AdminPortfolioForm({
               نمایش در سایت (فعال)
             </label>
           </div>
+        </div>
+      </section>
+
+      {/* کیس‌استادی — فاز E */}
+      <section className="rounded-2xl border border-white/10 bg-[#12121a] p-5 space-y-4">
+        <h2 className="font-bold">کیس‌استادی (برای صفحهٔ اختصاصی نمونه‌کار)</h2>
+        <p className="text-[11px] text-white/40">هرچه این بخش کامل‌تر باشد، نمونه‌کار صفحهٔ اختصاصی + سئوی قوی‌تری دارد.</p>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className={labelCls} htmlFor="slug">اسلاگ (آدرس کیس‌استادی)</label>
+            <input id="slug" name="slug" dir="ltr" defaultValue={defaults.slug ?? ""} className={inputCls} placeholder="خالی = از عنوان ساخته می‌شود" />
+          </div>
+          <div>
+            <label className={labelCls} htmlFor="client">کارفرما / برند</label>
+            <input id="client" name="client" maxLength={120} defaultValue={defaults.client ?? ""} className={inputCls} placeholder="مثلاً: بانک آینده" />
+          </div>
+          <div>
+            <label className={labelCls} htmlFor="projectType">نوع پروژه</label>
+            <input id="projectType" name="projectType" maxLength={60} defaultValue={defaults.projectType ?? ""} className={inputCls} placeholder="همایش / کنسرت / کمپین تبلیغاتی" />
+          </div>
+          <div>
+            <label className={labelCls} htmlFor="projectDate">زمان اجرا</label>
+            <input id="projectDate" name="projectDate" maxLength={60} defaultValue={defaults.projectDate ?? ""} className={inputCls} placeholder="مثلاً: پاییز ۱۴۰۳" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelCls} htmlFor="servicesUsed">خدمات انجام‌شده (با ویرگول جدا کنید)</label>
+            <input id="servicesUsed" name="servicesUsed" maxLength={600} defaultValue={defaults.servicesUsed?.join("، ") ?? ""} className={inputCls} placeholder="برنامه‌ریزی، صدا و نور، پذیرایی" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelCls} htmlFor="results">نتایج پروژه</label>
+            <textarea id="results" name="results" rows={3} maxLength={3000} defaultValue={defaults.results ?? ""} className={inputCls} placeholder="مثلاً: ۸۰۰ مهمان، ۹۵٪ رضایت، ۲ میلیون بازدید رسانه‌ای" />
+          </div>
+          <div className="sm:col-span-2">
+            <label className={labelCls} htmlFor="gallery">گالری (هر خط یک آدرس عکس)</label>
+            <textarea id="gallery" name="gallery" rows={3} maxLength={3000} dir="ltr" defaultValue={defaults.gallery?.join("\n") ?? ""} className={`${inputCls} font-mono text-xs`} placeholder="/images/photo1.jpg&#10;https://…" />
+          </div>
+          <div className="sm:col-span-2 flex items-center">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="isFeatured" defaultChecked={defaults.isFeatured ?? false} className="h-4 w-4 accent-[#d4af37]" />
+              کیس‌استادی ویژه (بالای صفحهٔ پورتفولیو)
+            </label>
+          </div>
+        </div>
+      </section>
+
+      {/* سئو — فاز E */}
+      <section className="rounded-2xl border border-white/10 bg-[#12121a] p-5 space-y-4">
+        <h2 className="font-bold">سئو</h2>
+        <SeoPreviewFields
+          defaultTitle={defaults.seoTitle ?? ""}
+          defaultDescription={defaults.seoDescription ?? ""}
+          fallbackTitle={defaults.title || "عنوان نمونه‌کار"}
+          path="/portfolio/..."
+        />
+        <div>
+          <label className={labelCls} htmlFor="altText">متن جایگزین تصویر (Alt)</label>
+          <input id="altText" name="altText" maxLength={200} defaultValue={defaults.altText ?? ""} className={inputCls} placeholder="توصیف دقیق عکس برای گوگل و نابینایان" />
         </div>
       </section>
 

@@ -12,7 +12,30 @@ import { assertAdmin } from "@/lib/avahub/admin";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export type JournalFormState = { error?: string; fieldErrors?: Record<string, string> };
+export type JournalFormState = {
+  error?: string;
+  fieldErrors?: Record<string, string>;
+  warnings?: string[]; // فاز E — هشدار سئو (تکراری بودن Title/Description)
+};
+
+// فاز E — هشدار تکراری بودن Title/Description در مقاله‌های دیگر
+async function dupMetaWarnings(
+  metaTitle: string | null,
+  metaDescription: string | null,
+  excludeId?: string
+): Promise<string[]> {
+  const warnings: string[] = [];
+  const not = excludeId ? { id: { not: excludeId } } : {};
+  if (metaTitle) {
+    const dup = await db.journalPost.findFirst({ where: { metaTitle, ...not }, select: { title: true } });
+    if (dup) warnings.push(`هشدار سئو: Title تکراری — در مقالهٔ «${dup.title}» هم استفاده شده است.`);
+  }
+  if (metaDescription) {
+    const dup = await db.journalPost.findFirst({ where: { metaDescription, ...not }, select: { title: true } });
+    if (dup) warnings.push(`هشدار سئو: Description تکراری — در مقالهٔ «${dup.title}» هم استفاده شده است.`);
+  }
+  return warnings;
+}
 
 const schema = z.object({
   title: z.string().trim().min(3, "عنوان حداقل ۳ نویسه").max(160),
@@ -34,6 +57,8 @@ const schema = z.object({
   publishedAt: z.string().optional().or(z.literal("")),
   metaTitle: z.string().trim().max(120).optional().or(z.literal("")),
   metaDescription: z.string().trim().max(200).optional().or(z.literal("")),
+  category: z.string().trim().max(60).optional().or(z.literal("")),
+  isFeatured: z.boolean().optional().default(false),
 });
 
 function slugifyTitle(title: string): string {
@@ -84,6 +109,8 @@ function readForm(fd: FormData) {
     publishedAt: fd.get("publishedAt") ?? "",
     metaTitle: fd.get("metaTitle") ?? "",
     metaDescription: fd.get("metaDescription") ?? "",
+    category: fd.get("category") ?? "",
+    isFeatured: fd.get("isFeatured") === "on" || fd.get("isFeatured") === "true",
   });
 }
 
@@ -121,6 +148,12 @@ export async function createJournalAction(
   }
   const slug = await uniqueSlug(d.slug ? d.slug : slugifyTitle(d.title));
 
+  // فاز E — هشدار سئوی تکراری بودن (غیرمسدودکننده)
+  const warnings = await dupMetaWarnings(
+    d.metaTitle || d.title,
+    d.metaDescription || d.excerpt || null
+  );
+
   const post = await db.journalPost.create({
     data: {
       title: d.title,
@@ -130,6 +163,8 @@ export async function createJournalAction(
       coverImage: d.coverImage || null,
       icon: d.icon || null,
       tags: tagsToArray(d.tags),
+      category: d.category || null,
+      isFeatured: d.isFeatured,
       authorName: d.authorName || null,
       status: d.status,
       publishedAt:
@@ -140,6 +175,9 @@ export async function createJournalAction(
     select: { id: true },
   });
 
+  if (warnings.length > 0) {
+    redirect(`/admin/journal/${post.id}/edit?created=1&w=${encodeURIComponent(warnings.join(" | "))}`);
+  }
   revalidatePath("/admin/journal");
   revalidatePath("/journal");
   redirect(`/admin/journal/${post.id}/edit?created=1`);
@@ -170,6 +208,13 @@ export async function updateJournalAction(
   if (d.publishedAt && !publishedAt) return { error: "تاریخ انتشار نامعتبر است" };
   const slug = await uniqueSlug(d.slug ? d.slug : slugifyTitle(d.title), id);
 
+  // فاز E — هشدار سئو
+  const warnings = await dupMetaWarnings(
+    d.metaTitle || d.title,
+    d.metaDescription || d.excerpt || null,
+    id
+  );
+
   await db.journalPost.update({
     where: { id },
     data: {
@@ -180,6 +225,8 @@ export async function updateJournalAction(
       coverImage: d.coverImage || null,
       icon: d.icon || null,
       tags: tagsToArray(d.tags),
+      category: d.category || null,
+      isFeatured: d.isFeatured,
       authorName: d.authorName || null,
       status: d.status,
       publishedAt:
@@ -192,6 +239,9 @@ export async function updateJournalAction(
   revalidatePath("/admin/journal");
   revalidatePath("/journal");
   revalidatePath(`/journal/${slug}`);
+  if (warnings.length > 0) {
+    redirect(`/admin/journal/${id}/edit?updated=1&w=${encodeURIComponent(warnings.join(" | "))}`);
+  }
   redirect(`/admin/journal/${id}/edit?updated=1`);
 }
 

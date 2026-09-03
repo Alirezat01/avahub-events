@@ -2,15 +2,27 @@ import type { Metadata } from "next";
 import { PageHero } from "@/components/avahub/page-hero";
 import { EventExplorer } from "@/components/avahub/event-explorer";
 import { getUpcomingPublishedEvents, getActiveCategories } from "@/lib/avahub/events-db";
-import { JsonLd } from "@/components/avahub/json-ld";
+import { JsonLd, makeBreadcrumbJsonLd } from "@/components/avahub/json-ld";
 import { SITE_URL } from "@/lib/avahub/site";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "رویدادهای پیش رو | همایش، سمینار و کنفرانس",
+  title: "تقویم رویدادها | کنسرت، همایش، کارگاه و رویداد سازمانی",
   description:
-    "تقویم رویدادهای پیش رو آواهاب ایونتس؛ همایش، سمینار، کنفرانس و کارگاه‌های تخصصی با ثبت حضور آنلاین. رویداد بعدی خود را همین حالا پیدا کنید.",
+    "همهٔ رویدادهای پیش رو آواهاب ایونتس در یک تقویم: کنسرت، همایش، سمینار، کارگاه تخصصی، جشنواره و رویداد سازمانی در تهران و شهرها — ثبت‌حضور آنلاین رایگان با بلیت QR.",
+  keywords: [
+    "تقویم رویدادها",
+    "رویدادهای تهران",
+    "کنسرت",
+    "همایش",
+    "سمینار",
+    "کارگاه آموزشی",
+    "جشنواره",
+    "رویداد سازمانی",
+    "ثبت نام رویداد",
+    "بلیت رویداد",
+  ],
   alternates: { canonical: "/events" },
 };
 
@@ -32,7 +44,7 @@ export default async function EventsPage() {
   const itemListJsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    name: "رویدادهای پیش رو آواهاب ایونتس",
+    name: "تقویم رویدادهای آواهاب ایونتس",
     numberOfItems: events.length,
     itemListElement: events.map((e, i) => ({
       "@type": "ListItem",
@@ -42,9 +54,16 @@ export default async function EventsPage() {
     })),
   };
 
+  // فاز E: Breadcrumb یکپارچه
+  const breadcrumbJsonLd = makeBreadcrumbJsonLd([
+    { name: "خانه", href: "/" },
+    { name: "رویدادها", href: "/events" },
+  ]);
+
   return (
     <>
       {!dbError && events.length > 0 && <JsonLd data={itemListJsonLd} />}
+      <JsonLd data={breadcrumbJsonLd} />
       <PageHero
         eyebrow="UPCOMING EVENTS"
         title="رویدادهای پیش رو"

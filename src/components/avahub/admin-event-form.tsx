@@ -28,6 +28,8 @@ type EventDefaults = {
   status?: string;
   metaTitle?: string | null;
   metaDescription?: string | null;
+  eventType?: string | null;
+  isOnline?: boolean;
   hasSeating?: boolean | null;
   cateringNote?: string | null;
   musicInfo?: string | null;
@@ -162,7 +164,26 @@ export function AdminEventForm({
           <div className="sm:col-span-2">
             <label className={labelCls} htmlFor="specialNotes">سایر نکات مهم</label>
             <textarea id="specialNotes" name="specialNotes" rows={3} maxLength={1000} defaultValue={defaults.specialNotes ?? ""} className={inputCls} placeholder="هر نکته‌ای که شرکت‌کننده باید بداند" />
+                    <div>
+            <label className={labelCls} htmlFor="eventType">نوع رویداد (برای Schema گوگل)</label>
+            <select id="eventType" name="eventType" defaultValue={defaults.eventType ?? ""} className={inputCls}>
+              <option value="">— تشخیص خودکار —</option>
+              <option value="MUSIC">موسیقی / کنسرت</option>
+              <option value="CONFERENCE">کنفرانس / همایش</option>
+              <option value="SEMINAR">سمینار</option>
+              <option value="WORKSHOP">کارگاه / ورکشاپ</option>
+              <option value="CEREMONY">مراسم / جشن</option>
+              <option value="SPORT">ورزشی</option>
+              <option value="EXHIBITION">نمایشگاه</option>
+            </select>
           </div>
+          <div className="flex items-end pb-1">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="isOnline" defaultChecked={defaults.isOnline ?? false} className="h-4 w-4 accent-[#d4af37]" />
+              رویداد آنلاین است (بدون مکان فیزیکی)
+            </label>
+          </div>
+</div>
         </div>
       </section>
 

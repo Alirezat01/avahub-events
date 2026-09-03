@@ -114,6 +114,9 @@ model Event {
   status          EventStatus @default(DRAFT)
   metaTitle       String?     /// SEO — title اختصاصی
   metaDescription String?     /// SEO — description اختصاصی
+  /// ── فاز E — انعطاف اسکیمای رویداد ──
+  eventType       String?     /// MUSIC | CONFERENCE | WORKSHOP | SEMINAR | CEREMONY | SPORT | EXHIBITION | OTHER — برای نوع Schema گوگل
+  isOnline        Boolean     @default(false) /// رویداد آنلاین — Schema با VirtualLocation
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @default(now()) @updatedAt
 
@@ -247,6 +250,8 @@ model JournalPost {
   icon            String?    /// ایموجی کاور جایگزین (وقتی عکس نیست)
   gradient        String?    /// کلاس گرادیان کاور جایگزین
   tags            String[]   @default([])
+  category        String?    /// فاز E — دستهٔ مقاله: رویدادها | برندسازی | تولید محتوا | تبلیغات
+  isFeatured      Boolean    @default(false) /// فاز E — مقالهٔ ویژه بالای مجله
   status          PostStatus @default(DRAFT)
   publishedAt     DateTime?  /// تاریخ انتشار (نمایش عمومی)
   authorName      String?
@@ -273,6 +278,19 @@ model PortfolioItem {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @default(now()) @updatedAt
+
+  /// ── فاز E — Case Study + سئو ──
+  slug            String?   @unique /// آدرس صفحهٔ کیس‌استادی /portfolio/[slug]
+  client          String?   /// نام کارفرما/برند
+  projectType     String?   /// همایش | کنسرت | برندینگ | کمپین و…
+  projectDate     String?   /// مثلاً «پاییز ۱۴۰۳»
+  servicesUsed    String[]  @default([]) /// خدمات انجام‌شده روی این پروژه
+  results         String?   /// نتایج پروژه — چند خط
+  gallery         String[]  @default([]) /// گالری چندتصویری
+  isFeatured      Boolean   @default(false) /// نمایش ویژه بالای صفحهٔ پورتفولیو
+  seoTitle        String?   /// SEO — title اختصاصی
+  seoDescription  String?   /// SEO — description اختصاصی
+  altText         String?   /// SEO — متن جایگزین تصویر کاور
 
   @@index([isActive, sortOrder])
   @@map("portfolio_items")

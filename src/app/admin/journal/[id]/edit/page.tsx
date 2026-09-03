@@ -60,6 +60,8 @@ export default async function EditJournalPage({
             : "",
           metaTitle: post.metaTitle,
           metaDescription: post.metaDescription,
+          category: post.category,
+          isFeatured: post.isFeatured,
         }}
         mediaUrls={(media ?? []).map((m) => m.url)}
         submitLabel="ذخیرهٔ تغییرات"

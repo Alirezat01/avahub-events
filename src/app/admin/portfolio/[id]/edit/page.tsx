@@ -37,6 +37,17 @@ export default async function EditPortfolioPage({
           coverImage: item.coverImage,
           link: item.link,
           sortOrder: item.sortOrder,
+          slug: post.slug,
+          client: post.client,
+          projectType: post.projectType,
+          projectDate: post.projectDate,
+          servicesUsed: post.servicesUsed,
+          results: post.results,
+          gallery: post.gallery,
+          isFeatured: post.isFeatured,
+          seoTitle: post.seoTitle,
+          seoDescription: post.seoDescription,
+          altText: post.altText,
           isActive: item.isActive,
         }}
         mediaUrls={(media ?? []).map((m) => m.url)}

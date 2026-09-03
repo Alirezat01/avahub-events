@@ -6,6 +6,7 @@ import { SERVICES } from "@/lib/avahub/services";
 import { PageHero } from "@/components/avahub/page-hero";
 import { Reveal } from "@/components/avahub/reveal";
 import { TiltCard } from "@/components/avahub/tilt-card";
+import { JsonLd, makeBreadcrumbJsonLd } from "@/components/avahub/json-ld";
 
 export const metadata: Metadata = {
   title: "خدمات آواهاب ایونتس | از ایده تا اجرا و رشد",
@@ -24,6 +25,12 @@ const PROCESS = [
 export default function ServicesPage() {
   return (
     <>
+      <JsonLd
+        data={makeBreadcrumbJsonLd([
+          { name: "خانه", href: "/" },
+          { name: "خدمات", href: "/services" },
+        ])}
+      />
       <PageHero
         eyebrow="OUR SERVICES"
         title="خدمات ما"

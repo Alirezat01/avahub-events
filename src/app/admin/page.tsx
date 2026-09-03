@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { adminEventRows, globalCounts, fmtFa } from "@/lib/avahub/admin-data";
 import { EventStatus } from "@prisma/client";
+import { cloneEventAction } from "@/app/admin/events/actions";
 
 // ─────────────────────────────────────────────────────────────
 // داشبورد پنل ادمین — فاز ۵
@@ -21,8 +22,23 @@ const EVENT_STATUS_CLASS: Record<EventStatus, string> = {
   ARCHIVED: "bg-white/5 text-white/50 border-white/10",
 };
 
-export default async function AdminDashboardPage() {
-  const [g, rows] = await Promise.all([globalCounts(), adminEventRows()]);
+export default async function AdminDashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ status?: string; city?: string; q?: string; cloned?: string }>;
+}) {
+  const sp = await searchParams;
+  const [g, allRows] = await Promise.all([globalCounts(), adminEventRows()]);
+
+  // فاز E: فیلتر وضعیت / شهر / جستجو
+  const rows = allRows.filter((e) => {
+    if (sp.status && e.status !== (sp.status as EventStatus)) return false;
+    if (sp.city && e.venueCity !== sp.city) return false;
+    if (sp.q && !(e.title + e.slug).toLowerCase().includes(sp.q.toLowerCase())) return false;
+    return true;
+  });
+
+  const cities = Array.from(new Set(allRows.map((e) => e.venueCity))).filter(Boolean);
 
   const kpis = [
     { label: "ثبت‌نام قطعی", value: g.confirmed, tone: "text-emerald-300", ring: "border-emerald-500/30" },
@@ -40,7 +56,49 @@ export default async function AdminDashboardPage() {
         <p className="mt-2 text-white/60">
           نمای کلی ثبت‌نام‌ها و رویدادها — برای جزئیات و استخراج شماره‌ها وارد صفحه هر رویداد شوید.
         </p>
+        {sp.cloned && (
+          <p className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-2.5 text-sm text-emerald-300">
+            ✅ رویداد کپی شد — در حالت پیش‌نویس؛ تاریخ و جزئیات را ویرایش کنید.
+          </p>
+        )}
       </div>
+
+      {/* فیلترها — فاز E */}
+      <form className="flex flex-wrap items-center gap-2 rounded-2xl border border-white/10 bg-[#12121a] p-4" method="get">
+        <input
+          name="q"
+          defaultValue={sp.q ?? ""}
+          placeholder="جستجوی عنوان…"
+          className="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm outline-none focus:border-[#d4af37]/60"
+        />
+        <select
+          name="status"
+          defaultValue={sp.status ?? ""}
+          className="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm outline-none"
+        >
+          <option value="">همهٔ وضعیت‌ها</option>
+          <option value="DRAFT">پیش‌نویس</option>
+          <option value="PUBLISHED">منتشر شده</option>
+          <option value="CANCELLED">لغو شده</option>
+          <option value="ARCHIVED">آرشیو</option>
+        </select>
+        <select
+          name="city"
+          defaultValue={sp.city ?? ""}
+          className="rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-sm outline-none"
+        >
+          <option value="">همهٔ شهرها</option>
+          {cities.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+        <button type="submit" className="rounded-xl border border-[#d4af37]/40 bg-[#d4af37]/10 px-4 py-2 text-sm font-bold text-[#d4af37] transition hover:bg-[#d4af37]/20">
+          اعمال فیلتر
+        </button>
+        <Link href="/admin" className="rounded-xl border border-white/15 px-4 py-2 text-sm text-white/60 transition hover:bg-white/5">
+          حذف فیلتر
+        </Link>
+      </form>
 
       {/* KPIها */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-3">
@@ -154,6 +212,17 @@ export default async function AdminDashboardPage() {
                         >
                           QR
                         </Link>
+                        {/* فاز E: کلون ایونت */}
+                        <form action={cloneEventAction}>
+                          <input type="hidden" name="id" value={e.id} />
+                          <button
+                            type="submit"
+                            title="ساخت کپی از این رویداد (پیش‌نویس)"
+                            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs hover:bg-white/5 transition"
+                          >
+                            کپی
+                          </button>
+                        </form>
                       </div>
                     </td>
                   </tr>

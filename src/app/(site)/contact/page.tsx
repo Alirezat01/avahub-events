@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Instagram, Facebook, MapPin, Phone } from "lucide-react";
 import { PageHero } from "@/components/avahub/page-hero";
+import { JsonLd, makeBreadcrumbJsonLd } from "@/components/avahub/json-ld";
 import { Reveal } from "@/components/avahub/reveal";
 import { ContactForm } from "@/components/avahub/contact-form";
 import { WhatsAppIcon } from "@/components/avahub/whatsapp-icon";
@@ -46,6 +47,12 @@ const INFO = [
 export default function ContactPage() {
   return (
     <>
+      <JsonLd
+        data={makeBreadcrumbJsonLd([
+          { name: "خانه", href: "/" },
+          { name: "تماس با ما", href: "/contact" },
+        ])}
+      />
       <PageHero
         eyebrow="CONTACT US"
         title="بیایید صحبت کنیم"

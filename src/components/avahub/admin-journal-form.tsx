@@ -5,6 +5,7 @@ import Link from "next/link";
 import Markdown from "react-markdown";
 import type { JournalFormState } from "@/app/admin/journal/actions";
 import { AdminImageField } from "@/components/avahub/admin-image-field";
+import { SeoPreviewFields } from "@/components/avahub/admin-seo-preview";
 
 // ─────────────────────────────────────────────────────────────
 // فرم ساخت/ویرایش مقالهٔ مجله — فاز ۶
@@ -25,6 +26,8 @@ type Defaults = {
   publishedAt?: string; // yyyy-mm-dd
   metaTitle?: string | null;
   metaDescription?: string | null;
+  category?: string | null;
+  isFeatured?: boolean;
 };
 
 const inputCls =
@@ -94,6 +97,22 @@ export function AdminJournalForm({
             <input id="icon" name="icon" maxLength={8} defaultValue={defaults.icon ?? ""} className={inputCls} placeholder="✨ یا 🎤" />
           </div>
           <div>
+            <label className={labelCls} htmlFor="category">دستهٔ مقاله</label>
+            <select id="category" name="category" defaultValue={defaults.category ?? ""} className={inputCls}>
+              <option value="">— بدون دسته —</option>
+              <option value="رویدادها">رویدادها</option>
+              <option value="برندسازی">برندسازی</option>
+              <option value="تولید محتوا">تولید محتوا</option>
+              <option value="تبلیغات">تبلیغات</option>
+            </select>
+          </div>
+          <div className="flex items-end pb-1">
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="isFeatured" defaultChecked={defaults.isFeatured ?? false} className="h-4 w-4 accent-[#d4af37]" />
+              مقالهٔ ویژه (بالای مجله)
+            </label>
+          </div>
+          <div>
             <label className={labelCls} htmlFor="tags">برچسب‌ها (با ویرگول جدا کنید)</label>
             <input id="tags" name="tags" defaultValue={defaults.tags?.join("، ") ?? ""} className={inputCls} placeholder="رویداد، برندینگ" />
           </div>
@@ -147,16 +166,12 @@ export function AdminJournalForm({
       {/* سئو */}
       <section className="rounded-2xl border border-white/10 bg-[#12121a] p-5 space-y-4">
         <h2 className="font-bold">سئو (اختیاری)</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className={labelCls} htmlFor="metaTitle">Title گوگل</label>
-            <input id="metaTitle" name="metaTitle" maxLength={120} defaultValue={defaults.metaTitle ?? ""} className={inputCls} placeholder="خالی = همان عنوان مقاله" />
-          </div>
-          <div>
-            <label className={labelCls} htmlFor="metaDescription">Description گوگل</label>
-            <input id="metaDescription" name="metaDescription" maxLength={200} defaultValue={defaults.metaDescription ?? ""} className={inputCls} placeholder="خالی = همان خلاصه" />
-          </div>
-        </div>
+        <SeoPreviewFields
+          defaultTitle={defaults.metaTitle ?? ""}
+          defaultDescription={defaults.metaDescription ?? ""}
+          fallbackTitle={defaults.title || "عنوان مقاله"}
+          path="/journal/..."
+        />
       </section>
 
       <div className="flex items-center gap-3">

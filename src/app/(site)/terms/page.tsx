@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { CONSENT_VERSION } from "@/lib/avahub/consent";
+import { JsonLd, makeBreadcrumbJsonLd } from "@/components/avahub/json-ld";
 
 export const metadata: Metadata = {
   title: "توافق‌نامه کاربر و حریم خصوصی | آواهاب ایونتس",
@@ -90,7 +91,14 @@ const SECTIONS: { title: string; paragraphs: string[] }[] = [
 
 export default function TermsPage() {
   return (
-    <main className="relative min-h-[100svh] overflow-hidden pb-24 pt-28">
+    <>
+      <JsonLd
+        data={makeBreadcrumbJsonLd([
+          { name: "خانه", href: "/" },
+          { name: "قوانین و مقررات", href: "/terms" },
+        ])}
+      />
+      <main className="relative min-h-[100svh] overflow-hidden pb-24 pt-28">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-[420px] bg-[radial-gradient(ellipse_at_top,rgba(123,77,223,0.14),transparent_60%)]"
@@ -141,5 +149,6 @@ export default function TermsPage() {
         </p>
       </div>
     </main>
+    </>
   );
 }

@@ -4,6 +4,7 @@ import { Award, Layers, MapPin } from "lucide-react";
 import { PageHero } from "@/components/avahub/page-hero";
 import { Reveal } from "@/components/avahub/reveal";
 import { CountUp } from "@/components/avahub/count-up";
+import { JsonLd, makeBreadcrumbJsonLd } from "@/components/avahub/json-ld";
 
 export const metadata: Metadata = {
   title: "درباره آواهاب ایونتس | میراث آوای شباهنگ، اجرای حرفه‌ای رویداد",
@@ -47,6 +48,12 @@ const STEPS = [
 export default function AboutPage() {
   return (
     <>
+      <JsonLd
+        data={makeBreadcrumbJsonLd([
+          { name: "خانه", href: "/" },
+          { name: "درباره ما", href: "/about" },
+        ])}
+      />
       <PageHero
         eyebrow="ABOUT AVAHUB"
         title="ما ایده‌ها را به تجربه تبدیل می‌کنیم"

@@ -7,17 +7,83 @@ import { db } from "@/lib/db";
 import { assertAdmin } from "@/lib/avahub/admin";
 
 // ─────────────────────────────────────────────────────────────
-// Server Actions نمونه‌کارها — فاز ۶ (فقط ادمین)
+// Server Actions نمونه‌کارها — فاز ۶ + فاز E (کیس‌استادی + سئو)
 // ─────────────────────────────────────────────────────────────
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export type PortfolioFormState = { error?: string; fieldErrors?: Record<string, string> };
+export type PortfolioFormState = {
+  error?: string;
+  fieldErrors?: Record<string, string>;
+  warnings?: string[]; // فاز E — هشدار سئو
+};
+
+// فاز E — هشدار تکراری بودن Title/Description (در بین همهٔ نمونه‌کارها)
+async function dupMetaWarnings(
+  seoTitle: string | null,
+  seoDescription: string | null,
+  excludeId?: string
+): Promise<string[]> {
+  const warnings: string[] = [];
+  const not = excludeId ? { id: { not: excludeId } } : {};
+  if (seoTitle) {
+    const dup = await db.portfolioItem.findFirst({ where: { seoTitle, ...not }, select: { title: true } });
+    if (dup) warnings.push(`هشدار سئو: Title تکراری — در نمونه‌کار «${dup.title}» هم استفاده شده است.`);
+  }
+  if (seoDescription) {
+    const dup = await db.portfolioItem.findFirst({ where: { seoDescription, ...not }, select: { title: true } });
+    if (dup) warnings.push(`هشدار سئو: Description تکراری — در نمونه‌کار «${dup.title}» هم استفاده شده است.`);
+  }
+  return warnings;
+}
+
+function splitList(raw: FormDataEntryValue | null): string[] {
+  if (!raw) return [];
+  return String(raw)
+    .split(/[,،\n]/)
+    .map((t) => t.trim())
+    .filter(Boolean)
+    .slice(0, 20);
+}
+
+function splitGallery(raw: FormDataEntryValue | null): string[] {
+  if (!raw) return [];
+  return String(raw)
+    .split(/\n/)
+    .map((t) => t.trim())
+    .filter((t) => /^https?:\/\/|^\/images\//.test(t))
+    .slice(0, 12);
+}
+
+function slugify(input: string): string {
+  const base = input
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .slice(0, 80)
+    .replace(/^-|-$/g, "");
+  return base || `case-${Date.now().toString(36)}`;
+}
+
+async function uniqueCaseSlug(preferred: string, excludeId?: string): Promise<string> {
+  let candidate = preferred;
+  let n = 2;
+  for (;;) {
+    const exists = await db.portfolioItem.findFirst({
+      where: { slug: candidate, ...(excludeId ? { id: { not: excludeId } } : {}) },
+      select: { id: true },
+    });
+    if (!exists) return candidate;
+    candidate = `${preferred}-${n++}`;
+  }
+}
 
 const schema = z.object({
   title: z.string().trim().min(2, "عنوان حداقل ۲ نویسه").max(120),
   tag: z.string().trim().max(40).optional().or(z.literal("")),
-  description: z.string().trim().max(1000).optional().or(z.literal("")),
+  description: z.string().trim().max(3000).optional().or(z.literal("")),
   coverImage: z.string().trim().min(1, "آدرس تصویر الزامی است").max(500),
   link: z
     .string()
@@ -28,6 +94,19 @@ const schema = z.object({
     .or(z.literal("")),
   sortOrder: z.coerce.number().int().min(0).max(9999),
   isActive: z.boolean().optional().default(true),
+  // فاز E — کیس‌استادی
+  slug: z.string().trim().max(90).optional().or(z.literal("")),
+  client: z.string().trim().max(120).optional().or(z.literal("")),
+  projectType: z.string().trim().max(60).optional().or(z.literal("")),
+  projectDate: z.string().trim().max(60).optional().or(z.literal("")),
+  servicesUsed: z.string().trim().max(600).optional().or(z.literal("")),
+  results: z.string().trim().max(3000).optional().or(z.literal("")),
+  gallery: z.string().trim().max(3000).optional().or(z.literal("")),
+  isFeatured: z.boolean().optional().default(false),
+  // فاز E — سئو
+  seoTitle: z.string().trim().max(120).optional().or(z.literal("")),
+  seoDescription: z.string().trim().max(200).optional().or(z.literal("")),
+  altText: z.string().trim().max(200).optional().or(z.literal("")),
 });
 
 function readForm(fd: FormData) {
@@ -39,6 +118,17 @@ function readForm(fd: FormData) {
     link: fd.get("link") ?? "",
     sortOrder: fd.get("sortOrder") ?? 0,
     isActive: fd.get("isActive") === "on" || fd.get("isActive") === "true",
+    slug: fd.get("slug") ?? "",
+    client: fd.get("client") ?? "",
+    projectType: fd.get("projectType") ?? "",
+    projectDate: fd.get("projectDate") ?? "",
+    servicesUsed: fd.get("servicesUsed") ?? "",
+    results: fd.get("results") ?? "",
+    gallery: fd.get("gallery") ?? "",
+    isFeatured: fd.get("isFeatured") === "on" || fd.get("isFeatured") === "true",
+    seoTitle: fd.get("seoTitle") ?? "",
+    seoDescription: fd.get("seoDescription") ?? "",
+    altText: fd.get("altText") ?? "",
   });
 }
 
@@ -60,7 +150,10 @@ export async function createPortfolioAction(
   }
   const d = parsed.data;
 
-  await db.portfolioItem.create({
+  const slug = await uniqueCaseSlug(d.slug || slugify(d.title));
+  const warnings = await dupMetaWarnings(d.seoTitle || null, d.seoDescription || null);
+
+  const created = await db.portfolioItem.create({
     data: {
       title: d.title,
       tag: d.tag || null,
@@ -69,11 +162,26 @@ export async function createPortfolioAction(
       link: d.link || null,
       sortOrder: d.sortOrder,
       isActive: d.isActive,
+      slug,
+      client: d.client || null,
+      projectType: d.projectType || null,
+      projectDate: d.projectDate || null,
+      servicesUsed: splitList(d.servicesUsed),
+      results: d.results || null,
+      gallery: splitGallery(d.gallery),
+      isFeatured: d.isFeatured,
+      seoTitle: d.seoTitle || null,
+      seoDescription: d.seoDescription || null,
+      altText: d.altText || null,
     },
+    select: { id: true },
   });
 
   revalidatePath("/admin/portfolio");
   revalidatePath("/portfolio");
+  if (warnings.length > 0) {
+    redirect(`/admin/portfolio/${created.id}/edit?created=1&w=${encodeURIComponent(warnings.join(" | "))}`);
+  }
   redirect("/admin/portfolio?created=1");
 }
 
@@ -98,6 +206,9 @@ export async function updatePortfolioAction(
   }
   const d = parsed.data;
 
+  const slug = await uniqueCaseSlug(d.slug || slugify(d.title), id);
+  const warnings = await dupMetaWarnings(d.seoTitle || null, d.seoDescription || null, id);
+
   await db.portfolioItem.update({
     where: { id },
     data: {
@@ -108,11 +219,26 @@ export async function updatePortfolioAction(
       link: d.link || null,
       sortOrder: d.sortOrder,
       isActive: d.isActive,
+      slug,
+      client: d.client || null,
+      projectType: d.projectType || null,
+      projectDate: d.projectDate || null,
+      servicesUsed: splitList(d.servicesUsed),
+      results: d.results || null,
+      gallery: splitGallery(d.gallery),
+      isFeatured: d.isFeatured,
+      seoTitle: d.seoTitle || null,
+      seoDescription: d.seoDescription || null,
+      altText: d.altText || null,
     },
   });
 
   revalidatePath("/admin/portfolio");
   revalidatePath("/portfolio");
+  revalidatePath(`/portfolio/${slug}`);
+  if (warnings.length > 0) {
+    redirect(`/admin/portfolio/${id}/edit?updated=1&w=${encodeURIComponent(warnings.join(" | "))}`);
+  }
   redirect("/admin/portfolio?updated=1");
 }
 

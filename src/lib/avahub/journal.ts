@@ -16,6 +16,8 @@ export type JournalCardView = {
   icon: string;
   coverImage: string | null;
   tags: string[];
+  category: string | null;
+  isFeatured: boolean;
 };
 
 const GRADIENTS = [
@@ -36,6 +38,8 @@ export const JOURNAL_FALLBACK: JournalCardView[] = [
     icon: "🏢",
     coverImage: null,
     tags: [],
+    category: "رویدادها",
+    isFeatured: false,
   },
   {
     title: "۵ تکنیک برای درخشش برند در رویدادها",
@@ -47,6 +51,8 @@ export const JOURNAL_FALLBACK: JournalCardView[] = [
     icon: "✨",
     coverImage: null,
     tags: [],
+    category: "برندسازی",
+    isFeatured: false,
   },
   {
     title: "پشت صحنه یک همایش موفق؛ از ایده تا اجرا",
@@ -58,6 +64,8 @@ export const JOURNAL_FALLBACK: JournalCardView[] = [
     icon: "🎤",
     coverImage: null,
     tags: [],
+    category: "رویدادها",
+    isFeatured: false,
   },
 ];
 
@@ -93,6 +101,8 @@ export async function getPublishedPosts(): Promise<{
       icon: p.icon || "✨",
       coverImage: p.coverImage,
       tags: p.tags,
+      category: (p as { category?: string | null }).category ?? null,
+      isFeatured: (p as { isFeatured?: boolean }).isFeatured ?? false,
     })),
   };
 }
