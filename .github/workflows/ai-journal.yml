@@ -52,7 +52,7 @@ jobs:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.6-flash' }}
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
-          SITE_URL: ${{ vars.SITE_URL }}
+          SITE_URL: ${{ vars.SITE_URL || secrets.SITE_URL }}
           AI_TOPIC: ${{ inputs.topic || '' }}
           AI_POST_STATUS: ${{ inputs.publish == true && 'PUBLISHED' || 'DRAFT' }}
         run: node scripts/ai-journal/generate.mjs
