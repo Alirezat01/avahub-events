@@ -8,6 +8,8 @@
 #   PUBLISH_TOKEN   — همان مقدار env متغیر PUBLISH_TOKEN روی Vercel
 # Variables لازم:
 #   SITE_URL        — مثل https://www.avahubevents.com
+# Variable اختیاری:
+#   GEMINI_MODEL    — نام مدل Gemini (پیش‌فرض: gemini-3.6-flash)
 # ─────────────────────────────────────────────────────────────
 
 name: AI Journal Writer
@@ -48,6 +50,7 @@ jobs:
       - name: Generate & publish article
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.6-flash' }}
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
           SITE_URL: ${{ vars.SITE_URL }}
           AI_TOPIC: ${{ inputs.topic || '' }}
