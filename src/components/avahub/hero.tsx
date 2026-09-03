@@ -66,6 +66,35 @@ export function Hero() {
       <div aria-hidden="true" className="absolute inset-0 bg-gradient-to-b from-[#0a0a0f]/85 via-[#0a0a0f]/30 to-[#0a0a0f]" />
       <div aria-hidden="true" className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(10,10,15,0.6)_100%)]" />
 
+      {/* ── فاز H — لایه‌های نور سینمایی: دو پرتو راننده + هالهٔ بنفش ── */}
+      {!reduced && (
+        <>
+          <div
+            aria-hidden="true"
+            className="animate-beam pointer-events-none absolute -top-32 right-[12%] h-[46rem] w-40 opacity-70 blur-2xl"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(232,207,122,0.16), rgba(212,175,55,0.05) 55%, transparent)",
+            }}
+          />
+          <div
+            aria-hidden="true"
+            className="animate-beam-late pointer-events-none absolute -top-40 left-[8%] h-[42rem] w-32 opacity-60 blur-2xl"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(123,77,223,0.22), rgba(123,77,223,0.06) 55%, transparent)",
+            }}
+          />
+        </>
+      )}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -left-40 top-1/3 h-96 w-96 rounded-full bg-purple/[0.13] blur-[130px]"
+      />
+
+      {/* ── فاز H — گرین فیلم (بافت نویز ظریف) ── */}
+      <div aria-hidden="true" className="film-grain absolute inset-0" />
+
       <AmbientParticles />
 
       {/* ── Main hero grid ── */}

@@ -44,9 +44,9 @@ export default function ServicesPage() {
             <TiltCard key={service.slug} delay={i * 0.07} className="h-full rounded-2xl">
               <Link
                 href={`/services/${service.slug}`}
-                className="tilt-root flex h-full flex-col overflow-hidden rounded-2xl border border-border bg-card/70 p-6 transition-colors duration-300 group-hover:border-purple/50"
+                className="glass-card tilt-root flex h-full flex-col overflow-hidden rounded-2xl p-6 transition-all duration-300 group-hover:shadow-[0_24px_60px_-24px_rgba(123,77,223,0.35)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/50"
               >
-                <div className="tilt-depth-2 mb-5 flex size-16 items-center justify-center rounded-2xl border border-border bg-[#0d0d14]">
+                <div className="tilt-depth-2 mb-5 flex size-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur">
                   <Image
                     src={service.icon}
                     alt=""

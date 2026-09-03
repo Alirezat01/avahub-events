@@ -1,7 +1,9 @@
 import { Reveal } from "./reveal";
+import { SignatureWave } from "./signature-wave";
 
 /**
  * Shared cinematic banner for inner pages — ambient glows + title block.
+ * فاز H: امضای موج صوتی آوا زیر تیتر + هاله‌های بنفش/طلایی لایه‌ای.
  */
 export function PageHero({
   eyebrow,
@@ -35,9 +37,12 @@ export function PageHero({
         <h1 className="text-3xl font-black leading-[1.35] sm:text-5xl sm:leading-[1.3]">
           {title}
         </h1>
-        <div aria-hidden="true" className="mx-auto mt-5 h-px w-24 gold-line" />
+        <SignatureWave
+          bars={28}
+          className="mx-auto mt-5 h-8 w-56 opacity-90 sm:w-72"
+        />
         {sub && (
-          <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-foreground/60 sm:text-base sm:leading-8">
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-foreground/60 sm:text-base sm:leading-8">
             {sub}
           </p>
         )}

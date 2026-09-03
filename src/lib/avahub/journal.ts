@@ -69,16 +69,21 @@ export const JOURNAL_FALLBACK: JournalCardView[] = [
   },
 ];
 
-/** مقالات منتشرشده برای صفحهٔ مجله */
+/** مقالات منتشرشده برای صفحهٔ مجله — در قطعیِ DB به تیزرها برمی‌گردد (فاز H) */
 export async function getPublishedPosts(): Promise<{
   posts: JournalCardView[];
   fromDb: boolean;
 }> {
-  const rows = await db.journalPost.findMany({
-    where: { status: "PUBLISHED" },
-    orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
-    take: 30,
-  });
+  let rows;
+  try {
+    rows = await db.journalPost.findMany({
+      where: { status: "PUBLISHED" },
+      orderBy: [{ publishedAt: "desc" }, { createdAt: "desc" }],
+      take: 30,
+    });
+  } catch {
+    return { posts: JOURNAL_FALLBACK, fromDb: false };
+  }
 
   if (rows.length === 0) return { posts: JOURNAL_FALLBACK, fromDb: false };
 

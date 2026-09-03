@@ -80,7 +80,7 @@ export function EventExplorer({
 
       {/* Grid */}
       {filtered.length > 0 ? (
-        <motion.div layout className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-5">
+        <motion.div layout className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
           <AnimatePresence mode="popLayout">
             {filtered.map((event, i) => (
               <motion.div

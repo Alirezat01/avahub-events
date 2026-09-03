@@ -1,7 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Instagram, Facebook, Phone, ExternalLink, MapPin } from "lucide-react";
+import { Instagram, Facebook, Phone, ExternalLink, MapPin, ArrowLeft } from "lucide-react";
 import { SERVICES } from "@/lib/avahub/services";
+import { SignatureWave } from "./signature-wave";
 
 function WhatsAppIcon({ className }: { className?: string }) {
   return (
@@ -41,9 +42,69 @@ const QUICK_LINKS = [
 
 export function SiteFooter() {
   return (
-    <footer className="relative mt-8 border-t border-border bg-[#07070b]">
+    <footer className="relative mt-8 overflow-hidden border-t border-border bg-[#07070b]">
+      {/* ── لایه‌های سینمایی: خط طلایی + هاله‌ها + واترمارک + گرین ── */}
       <div aria-hidden="true" className="absolute inset-x-0 top-0 h-px gold-line" />
-      <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-24 right-[8%] h-56 w-[34rem] max-w-full rounded-full bg-purple/10 blur-[130px]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-32 left-[4%] h-56 w-[30rem] max-w-full rounded-full bg-gold/[0.07] blur-[120px]"
+      />
+      {/* واترمارک حروف‌نگاره — عمق سینمایی */}
+      <span
+        aria-hidden="true"
+        className="watermark-text pointer-events-none absolute -bottom-6 left-0 select-none text-[19vw] font-black leading-none"
+        dir="ltr"
+      >
+        AVA HUB
+      </span>
+
+      {/* ── CTA band — دعوت به اقدام پیش از فوتر ── */}
+      <div className="relative border-b border-white/[0.06]">
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-6 px-4 py-12 sm:px-6 md:flex-row md:items-center">
+          <div>
+            <p className="mb-2 text-[11px] font-bold tracking-[0.3em] text-gold-soft/90">
+              LET&apos;S CREATE
+            </p>
+            <h2 className="text-2xl font-black leading-snug text-foreground sm:text-3xl">
+              ایدهٔ رویداد بعدی‌تان را{" "}
+              <span className="text-gradient-gold text-glow-gold">با هم بسازیم</span>
+            </h2>
+            <p className="mt-3 max-w-xl text-sm leading-7 text-foreground/55">
+              از مشاورهٔ اولیه تا اجرای کامل؛ تیم آواهاب کنار شماست — یک پیام
+              کافی است تا تقویم اجرا را شروع کنیم.
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap items-center gap-3">
+            <Link
+              href="/contact"
+              className="group inline-flex items-center gap-2 rounded-full bg-primary px-7 py-3 text-sm font-black text-primary-foreground shadow-[0_0_35px_rgba(212,175,55,0.28)] transition-all hover:shadow-[0_0_55px_rgba(212,175,55,0.45)]"
+            >
+              درخواست مشاوره
+              <ArrowLeft
+                className="size-4 transition-transform group-hover:-translate-x-1"
+                aria-hidden="true"
+              />
+            </Link>
+            <Link
+              href="/events"
+              className="inline-flex items-center justify-center rounded-full border border-border bg-white/[0.03] px-6 py-3 text-sm font-medium text-foreground/85 backdrop-blur transition-all hover:border-gold/45 hover:text-gold"
+            >
+              تقویم رویدادها
+            </Link>
+          </div>
+        </div>
+      </div>
+
+      {/* ── موج صوتی آوا — امضای برند میان CTA و شبکه‌ها ── */}
+      <div aria-hidden="true" className="relative mx-auto max-w-7xl px-4 pt-10 sm:px-6">
+        <SignatureWave bars={44} className="mx-auto h-10 w-full max-w-2xl opacity-80" />
+      </div>
+
+      <div className="relative mx-auto max-w-7xl px-4 py-14 sm:px-6">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
           {/* Brand — لوگوی واقعی آواهاب */}
           <div>
@@ -68,7 +129,7 @@ export function SiteFooter() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={social.label}
-                  className="inline-flex size-10 items-center justify-center rounded-full border border-border bg-card text-foreground/70 transition-all hover:-translate-y-1 hover:border-gold/50 hover:text-gold"
+                  className="inline-flex size-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] text-foreground/70 backdrop-blur transition-all hover:-translate-y-1 hover:border-gold/50 hover:bg-gold/10 hover:text-gold"
                 >
                   <social.icon className="size-[18px]" />
                 </a>
@@ -78,7 +139,8 @@ export function SiteFooter() {
 
           {/* Quick links */}
           <nav aria-label="لینک‌های فوتر">
-            <h3 className="mb-4 text-sm font-bold tracking-wide text-foreground/85">
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-bold tracking-wide text-foreground/85">
+              <span aria-hidden="true" className="inline-block size-1 rounded-full bg-gold" />
               دسترسی سریع
             </h3>
             <ul className="grid grid-cols-2 gap-x-4 gap-y-2.5">
@@ -108,7 +170,8 @@ export function SiteFooter() {
 
           {/* Services (SEO internal links) */}
           <nav aria-label="خدمات آواهاب">
-            <h3 className="mb-4 text-sm font-bold tracking-wide text-foreground/85">
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-bold tracking-wide text-foreground/85">
+              <span aria-hidden="true" className="inline-block size-1 rounded-full bg-gold" />
               خدمات ما
             </h3>
             <ul className="space-y-2.5">
@@ -127,7 +190,8 @@ export function SiteFooter() {
 
           {/* Contact */}
           <div>
-            <h3 className="mb-4 text-sm font-bold tracking-wide text-foreground/85">
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-bold tracking-wide text-foreground/85">
+              <span aria-hidden="true" className="inline-block size-1 rounded-full bg-gold" />
               ارتباط با ما
             </h3>
             <ul className="space-y-3 text-sm text-foreground/55">
@@ -152,7 +216,7 @@ export function SiteFooter() {
           </div>
         </div>
 
-        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-border pt-6 text-xs text-foreground/40 sm:flex-row">
+        <div className="mt-12 flex flex-col items-center justify-between gap-3 border-t border-white/[0.06] pt-6 text-xs text-foreground/40 sm:flex-row">
           <p>
             © ۱۴۰۵ آواهاب ایونتس — تمامی حقوق محفوظ است.{" "}
             <Link

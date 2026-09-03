@@ -61,6 +61,16 @@
   --gold-soft: #e8cf7a;    /* light gold */
   --warm: #f5f5f0;         /* warm white */
 
+  /* ── فاز H — توکن‌های سیستم طراحی ──
+     نسبت رنگ (۶۰-۳۰-۱۰): مشکی/ذغالی بستر، سفید گرم محتوا،
+     طلایی فقط برای CTA/تأکید، بنفش فقط برای عمق و هاله — هرگز برعکس */
+  --beam-warm: rgba(212, 175, 55, 0.07);
+  --beam-cool: rgba(123, 77, 223, 0.09);
+  --glass-bg: rgba(18, 18, 26, 0.55);
+  --glass-line: rgba(245, 245, 240, 0.09);
+  --glass-sheen: rgba(245, 245, 240, 0.06);
+  --ease-cine: cubic-bezier(0.22, 1, 0.36, 1);
+
   --background: #0a0a0f;
   --foreground: #f5f5f0;
   --card: #12121a;
@@ -157,6 +167,102 @@
     transform: translate3d(calc(var(--px, 0) * 11px), calc(var(--py, 0) * 11px), 0);
     transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
   }
+
+  /* ── فاز H — سیستم طراحی سینمایی ── */
+
+  /* شیشهٔ چندلایه: هایلایت داخلی بالا + خط نوری پایین (عمق شیشه واقعی) */
+  .glass-card {
+    position: relative;
+    background:
+      linear-gradient(180deg, rgba(245, 245, 240, 0.045), rgba(245, 245, 240, 0.012)),
+      var(--glass-bg);
+    backdrop-filter: blur(16px) saturate(1.25);
+    -webkit-backdrop-filter: blur(16px) saturate(1.25);
+    border: 1px solid var(--glass-line);
+    box-shadow:
+      inset 0 1px 0 0 var(--glass-sheen),
+      0 24px 60px -30px rgba(0, 0, 0, 0.7);
+  }
+
+  /* گرین فیلم — بافت نویز بسیار ظریف روی سکشن‌های سینمایی */
+  .film-grain {
+    position: relative;
+    isolation: isolate;
+  }
+  .film-grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size: 140px 140px;
+  }
+
+  /* واترمارک بزرگ حروف‌نگاره — فوتر سینمایی */
+  .watermark-text {
+    color: transparent;
+    -webkit-text-stroke: 1px rgba(245, 245, 240, 0.055);
+    user-select: none;
+    pointer-events: none;
+    line-height: 0.9;
+    white-space: nowrap;
+  }
+
+  /* اسکریم پایین کارت پوستری — خوانایی عنوان روی تصویر تمام‌قاب */
+  .poster-scrim {
+    background: linear-gradient(
+      to top,
+      rgba(10, 10, 15, 0.94) 0%,
+      rgba(10, 10, 15, 0.72) 26%,
+      rgba(10, 10, 15, 0.28) 55%,
+      transparent 78%
+    );
+  }
+
+  /* هالهٔ بنفش امضای برند */
+  .glow-purple {
+    box-shadow: 0 0 70px -12px rgba(123, 77, 223, 0.45);
+  }
+  .text-glow-gold {
+    text-shadow: 0 0 34px rgba(212, 175, 55, 0.35);
+  }
+
+  /* شمارهٔ ادیتوریال خدمات */
+  .editorial-index {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+
+  /* تقسیم‌کنندهٔ نشت‌کردهٔ طلایی — لبهٔ سکشن‌ها */
+  .hairline-fade {
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.45), transparent);
+  }
+}
+
+/* ── فاز H — کی‌فریم‌های امضا ── */
+
+/* اکولایزر موج صوتی (آوا) — میله‌های SignatureWave */
+@keyframes wave-eq {
+  0%, 100% { transform: scaleY(0.35); }
+  50% { transform: scaleY(1); }
+}
+@utility animate-wave-bar {
+  transform-origin: center;
+  animation: wave-eq 1.9s var(--ease-cine, ease-in-out) infinite;
+}
+
+/* رانش بسیار آرام پرتوهای نور هیرو */
+@keyframes beam-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(18deg); opacity: 0.55; }
+  50% { transform: translate3d(-3%, 4%, 0) rotate(14deg); opacity: 0.9; }
+}
+@utility animate-beam {
+  animation: beam-drift 13s ease-in-out infinite;
+}
+@utility animate-beam-late {
+  animation: beam-drift 17s ease-in-out 4s infinite;
 }
 
 @utility animate-morph {

@@ -38,9 +38,18 @@ export function SiteHeader() {
     <>
       <header
         className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
-          scrolled ? "glass-panel border-b border-border py-2" : "bg-transparent py-4"
+          scrolled
+            ? "border-b border-white/[0.06] bg-[#0a0a0f]/70 py-2 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.85)] backdrop-blur-xl backdrop-saturate-150"
+            : "bg-transparent py-4"
         }`}
       >
+        {/* خط نوری طلایی — فقط در حالت اسکرول (امضای سینمایی) */}
+        {scrolled && (
+          <span
+            aria-hidden="true"
+            className="absolute inset-x-0 bottom-[-1px] h-px hairline-fade opacity-70"
+          />
+        )}
         <div className="mx-auto flex h-12 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           {/* Brand — لوگوی واقعی آواهاب */}
           <Link href="/" aria-label="آواهاب ایونتس — خانه" className="flex shrink-0 items-center gap-2">

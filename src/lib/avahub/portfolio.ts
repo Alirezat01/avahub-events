@@ -39,16 +39,21 @@ export const PORTFOLIO_FALLBACK: PortfolioView[] = [
   { image: "/images/hero-bg.png", title: "رویداد بزرگ سالان", tag: "رویداد ویژه" },
 ];
 
-/** نمونه‌کارهای فعال سایت — از دیتابیس؛ اگر خالی بود، چیدمان پیش‌فرض */
+/** نمونه‌کارهای فعال سایت — از دیتابیس؛ اگر خالی یا قطع بود، چیدمان پیش‌فرض (فاز H) */
 export async function getActivePortfolioItems(): Promise<{
   items: PortfolioView[];
   fromDb: boolean;
 }> {
-  const rows = await db.portfolioItem.findMany({
-    where: { isActive: true },
-    orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
-    select: { title: true, tag: true, coverImage: true },
-  });
+  let rows: { title: string; tag: string | null; coverImage: string }[] = [];
+  try {
+    rows = await db.portfolioItem.findMany({
+      where: { isActive: true },
+      orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],
+      select: { title: true, tag: true, coverImage: true },
+    });
+  } catch {
+    return { items: PORTFOLIO_FALLBACK, fromDb: false };
+  }
 
   if (rows.length === 0) return { items: PORTFOLIO_FALLBACK, fromDb: false };
 

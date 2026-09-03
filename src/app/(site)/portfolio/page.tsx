@@ -17,14 +17,18 @@ export const metadata: Metadata = {
 };
 
 export default async function PortfolioPage() {
-  const [{ items }, { cases, fromDb }] = await Promise.all([
+  // مقاوم‌سازی فاز H: هر دو منبع داده با fallback امن — قطعیِ لحظه‌ایِ DB = ۵۰۰ نمی‌دهیم
+  const [activeRes, casesRes] = await Promise.allSettled([
     getActivePortfolioItems(),
-    getPortfolioCases().catch(() => ({ cases: [], fromDb: false })),
+    getPortfolioCases(),
   ]);
+  const items = activeRes.status === "fulfilled" ? activeRes.value.items : [];
+  const fromDbFlag = casesRes.status === "fulfilled" ? casesRes.value.fromDb : false;
+  const cases = casesRes.status === "fulfilled" ? casesRes.value.cases : [];
 
   // کیس‌استادی ویژه (فقط وقتی از دیتابیس می‌آید)
-  const featured = fromDb ? cases.find((c) => c.isFeatured && c.slug) : undefined;
-  const rest = fromDb
+  const featured = fromDbFlag ? cases.find((c) => c.isFeatured && c.slug) : undefined;
+  const rest = fromDbFlag
     ? cases.filter((c) => c.id !== featured?.id)
     : items.map((item, i) => ({
         id: `fb-${i}`,
@@ -68,12 +72,12 @@ export default async function PortfolioPage() {
           بسازد.
         </p>
 
-        {/* ── کیس‌استادی ویژه — فاز E ── */}
+        {/* ── کیس‌استادی ویژه — فاز E + متا استریپ فاز H ── */}
         {featured && (
           <Reveal className="mt-12">
             <Link
               href={`/portfolio/${featured.slug}`}
-              className="group grid gap-0 overflow-hidden rounded-3xl border border-border bg-card/50 lg:grid-cols-2"
+              className="group grid gap-0 overflow-hidden rounded-3xl border border-border bg-card/50 transition-all duration-500 hover:border-gold/30 hover:shadow-[0_30px_80px_-30px_rgba(212,175,55,0.22)] lg:grid-cols-2"
             >
               <div className="relative aspect-[16/10] lg:aspect-auto lg:min-h-[380px]">
                 <Image
@@ -108,10 +112,28 @@ export default async function PortfolioPage() {
                     {featured.description}
                   </p>
                 )}
-                {featured.client && (
-                  <p className="text-xs text-foreground/50">
-                    کارفرما: <span className="font-bold text-foreground/80">{featured.client}</span>
-                  </p>
+                {/* متا استریپ کیس‌استادی — فاز ۲ طراحی */}
+                {(featured.client || featured.projectType || featured.projectDate) && (
+                  <dl className="mt-1 grid grid-cols-3 gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-4 backdrop-blur">
+                    <div>
+                      <dt className="mb-1 text-[10px] font-bold text-foreground/45">کارفرما</dt>
+                      <dd className="truncate text-xs font-bold text-foreground/85">
+                        {featured.client || "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="mb-1 text-[10px] font-bold text-foreground/45">نوع پروژه</dt>
+                      <dd className="truncate text-xs font-bold text-foreground/85">
+                        {featured.projectType || "—"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="mb-1 text-[10px] font-bold text-foreground/45">سال اجرا</dt>
+                      <dd className="truncate text-xs font-bold text-foreground/85">
+                        {featured.projectDate || "—"}
+                      </dd>
+                    </div>
+                  </dl>
                 )}
                 <span className="mt-2 inline-flex items-center gap-2 text-sm font-bold text-gold transition-colors group-hover:text-gold-soft">
                   مطالعهٔ کیس‌استادی
@@ -145,7 +167,28 @@ export default async function PortfolioPage() {
                   <p className="translate-y-1 text-sm font-black text-foreground transition-transform duration-500 group-hover:translate-y-0 sm:text-base">
                     {work.title}
                   </p>
+                  {/* متای کیس — فاز ۲ طراحی */}
+                  {((work as { client?: string | null }).client ||
+                    (work as { projectType?: string | null }).projectType) && (
+                    <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px] text-foreground/60 opacity-0 transition-opacity duration-500 group-hover:opacity-100">
+                      {(work as { projectType?: string | null }).projectType && (
+                        <span>{(work as { projectType?: string | null }).projectType}</span>
+                      )}
+                      {(work as { projectType?: string | null }).projectType &&
+                        (work as { client?: string | null }).client && (
+                          <span aria-hidden="true" className="text-gold/60">•</span>
+                        )}
+                      {(work as { client?: string | null }).client && (
+                        <span>{(work as { client?: string | null }).client}</span>
+                      )}
+                    </p>
+                  )}
                 </figcaption>
+                {/* خط نوری طلایی — امضای هاور */}
+                <span
+                  aria-hidden="true"
+                  className="absolute inset-x-0 bottom-0 h-[2px] origin-center scale-x-0 bg-gradient-to-l from-transparent via-gold to-gold-soft transition-transform duration-500 ease-out group-hover:scale-x-100"
+                />
               </figure>
             );
 

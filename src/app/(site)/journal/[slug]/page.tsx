@@ -18,9 +18,14 @@ import { SERVICES } from "@/lib/avahub/services";
 export const dynamic = "force-dynamic";
 
 async function getPost(slug: string) {
-  const post = await db.journalPost.findUnique({ where: { slug } });
-  if (!post || post.status !== "PUBLISHED") return null;
-  return post;
+  // فاز H: خطای لحظه‌ای DB → 404 به‌جای 500 (گوگل صفحهٔ خطا ایندکس نمی‌کند)
+  try {
+    const post = await db.journalPost.findUnique({ where: { slug } });
+    if (!post || post.status !== "PUBLISHED") return null;
+    return post;
+  } catch {
+    return null;
+  }
 }
 
 /** تطبیق هوشمند خدمات مرتبط با موضوع مقاله — فاز د۲ (لینک‌سازی داخلی) */
@@ -75,6 +80,13 @@ export default async function JournalArticlePage({
   const { slug } = await params;
   const post = await getPost(slug);
   if (!post) notFound();
+
+  // فاز E: فهرست مطالب خودکار از تیترهای سطح ۲
+  const tocItems = (post.content ?? "")
+    .split("\n")
+    .filter((l) => l.startsWith("## "))
+    .map((l) => l.replace(/^##\s+/, "").trim())
+    .slice(0, 12);
 
   // اسکیمای Article — فاز د (SEO)
   const coverUrl = absoluteImageUrl(post.coverImage);
@@ -191,6 +203,20 @@ export default async function JournalArticlePage({
 
       {/* متن مقاله */}
       <article className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+        {/* فهرست مطالب خودکار — فاز E: از تیترهای ## مقاله */}
+        {tocItems.length >= 3 && (
+          <nav aria-label="فهرست مطالب" className="mb-8 rounded-2xl border border-border bg-card/50 p-5">
+            <p className="mb-3 text-sm font-black">فهرست مطالب</p>
+            <ol className="space-y-1.5 text-sm">
+              {tocItems.map((t, i) => (
+                <li key={i} className="flex gap-2 text-foreground/65">
+                  <span className="text-gold/70" aria-hidden="true">{(i + 1).toLocaleString("fa-IR")}.</span>
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )}
         <div className="max-w-none text-[15px] leading-9 text-foreground/75 [&_a]:font-medium [&_a]:text-gold-soft [&_a]:underline [&_a]:decoration-gold/40 [&_a]:underline-offset-4 [&_blockquote]:my-5 [&_blockquote]:border-r-2 [&_blockquote]:border-gold/40 [&_blockquote]:bg-card/40 [&_blockquote]:py-1 [&_blockquote]:pe-4 [&_blockquote]:ps-4 [&_blockquote]:text-foreground/60 [&_h2]:mb-3 [&_h2]:mt-10 [&_h2]:text-2xl [&_h2]:font-black [&_h2]:text-foreground [&_h3]:mb-2 [&_h3]:mt-7 [&_h3]:text-lg [&_h3]:font-black [&_h3]:text-foreground [&_hr]:my-8 [&_hr]:border-border [&_img]:rounded-2xl [&_li]:my-2 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pe-6 [&_p]:my-4 [&_strong]:font-bold [&_strong]:text-foreground [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pe-6">
           <Markdown>{post.content || post.excerpt || ""}</Markdown>
         </div>
