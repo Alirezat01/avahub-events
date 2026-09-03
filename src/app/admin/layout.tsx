@@ -37,6 +37,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <Link href="/admin" className={navCls}>
                 داشبورد
               </Link>
+              <Link href="/admin/calendar" className={navCls}>
+                تقویم
+              </Link>
               {isSuper && (
                 <Link href="/admin/events/new" className={navCls}>
                   رویداد جدید
