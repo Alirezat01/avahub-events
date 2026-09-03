@@ -8,6 +8,9 @@
 //   ۴) مقاله را با توکن به /api/journal/auto-publish سایت می‌فرستد (پیش‌فرض: DRAFT)
 // Secrets لازم روی GitHub:
 //   GEMINI_API_KEY ، PUBLISH_TOKEN ، SITE_URL (یا variable به همین نام)
+// Variable اختیاری:
+//   GEMINI_MODEL — نام مدل (پیش‌فرض: gemini-3.6-flash)؛ اگر گوگل مدل را عوض کرد
+//   فقط همین Variable را در تب Variables گیت‌هاب عوض کنید — بدون تغییر کد
 // ─────────────────────────────────────────────────────────────
 
 import { readFileSync } from "node:fs";
@@ -21,6 +24,9 @@ const PUBLISH_TOKEN = process.env.PUBLISH_TOKEN;
 const SITE_URL = (process.env.SITE_URL || process.env.NEXT_PUBLIC_SITE_URL || "").replace(/\/+$/, "");
 const FORCE_STATUS = (process.env.AI_POST_STATUS || "DRAFT").toUpperCase() === "PUBLISHED" ? "PUBLISHED" : "DRAFT";
 const MANUAL_TOPIC = process.env.AI_TOPIC || "";
+const GEMINI_MODEL = (process.env.GEMINI_MODEL || "gemini-3.6-flash").trim();
+// اگر مدلی بازنشسته شده باشد (404 NOT_FOUND)، خودکار سراغ گزینه‌های بعدی می‌رود
+const MODEL_CANDIDATES = [...new Set([GEMINI_MODEL, "gemini-flash-latest", "gemini-2.5-flash"])];
 
 const COVERS = [
   "/images/event-conference.png",
@@ -86,26 +92,38 @@ async function generateArticle(topic) {
   "contentMarkdown": "متن کامل مقاله با Markdown"
 }`;
 
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.75,
-          maxOutputTokens: 8192,
-          responseMimeType: "application/json",
-        },
-      }),
+  // مدل‌ها را به ترتیب امتحان می‌کند؛ فقط 404 (مدل بازنشسته) → مدل بعدی
+  let res = null;
+  let lastErr = "";
+  for (const model of MODEL_CANDIDATES) {
+    const r = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.75,
+            maxOutputTokens: 16384,
+            responseMimeType: "application/json",
+          },
+        }),
+      }
+    );
+    if (r.ok) {
+      res = r;
+      break;
     }
-  );
-
-  if (!res.ok) {
-    const t = await res.text();
-    fail(`Gemini API خطا داد (${res.status}): ${t.slice(0, 300)}`);
+    const t = await r.text();
+    lastErr = `(${r.status}) ${t.slice(0, 300)}`;
+    if (r.status === 404 || /NOT_FOUND|no longer available|is not supported|not found/i.test(t)) {
+      log(`مدل «${model}» در دسترس نیست؛ سراغ مدل بعدی می‌رویم…`);
+      continue;
+    }
+    fail(`Gemini API خطا داد ${lastErr}`);
   }
+  if (!res) fail(`هیچ‌کدام از مدل‌ها پاسخ ندادند — آخرین خطا: ${lastErr}`);
 
   const data = await res.json();
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
