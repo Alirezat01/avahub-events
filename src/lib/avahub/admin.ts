@@ -15,6 +15,7 @@ export type AdminSession = {
   email: string;
   fullName: string | null;
   role: AdminRole;
+  adminId: string; /// شناسهٔ رکورد ادمین (فاز K — برای مدیریت تیم)
 };
 
 /**
@@ -42,7 +43,7 @@ export async function getAdminSession(): Promise<AdminSession | null> {
 
   const admin = await db.admin.findFirst({
     where: { profileId: profile.id, isActive: true },
-    select: { role: true },
+    select: { id: true, role: true },
   });
   if (!admin) return null;
 
@@ -52,6 +53,7 @@ export async function getAdminSession(): Promise<AdminSession | null> {
     email: profile.email,
     fullName: profile.fullName,
     role: admin.role,
+    adminId: admin.id,
   };
 }
 
@@ -77,4 +79,41 @@ export async function assertAdmin(): Promise<AdminSession> {
   const session = await getAdminSession();
   if (!session) throw new Error("UNAUTHORIZED_ADMIN");
   return session;
+}
+
+// ───────────────────── فاز K — دسترسی رویدادی ─────────────────────
+
+/** صفحات فقط-مدیرارشد: غیر SUPER_ADMIN → صفحه ممنوع */
+export async function requireSuperAdmin(nextPath = "/admin"): Promise<AdminSession> {
+  const session = await requireAdmin(nextPath);
+  if (session.role !== "SUPER_ADMIN") redirect("/admin/forbidden");
+  return session;
+}
+
+/** نسخهٔ Server Action — خطا به‌جای ریدایرکت */
+export async function assertSuperAdmin(): Promise<AdminSession> {
+  const session = await assertAdmin();
+  if (session.role !== "SUPER_ADMIN") throw new Error("FORBIDDEN_SUPER_ADMIN_ONLY");
+  return session;
+}
+
+/**
+ * رویدادهای مجاز ادمین فعلی:
+ *  null  → همهٔ رویدادها (مدیر ارشد)
+ *  []    → هیچ (هنوز رویدادی تخصیص نیافته)
+ *  [...] → فقط رویدادهای تخصیص‌یافته (مدیر رویداد / کارمند)
+ */
+export async function getAllowedEventIds(session: AdminSession): Promise<string[] | null> {
+  if (session.role === "SUPER_ADMIN") return null;
+  const rows = await db.eventAdmin.findMany({
+    where: { admin: { profileId: session.profileId, isActive: true } },
+    select: { eventId: true },
+  });
+  return rows.map((r) => r.eventId);
+}
+
+/** آیا این ادمین به این رویداد دسترسی دارد؟ (برای صفحات [id] و روت‌ها) */
+export async function canAccessEvent(session: AdminSession, eventId: string): Promise<boolean> {
+  const allowed = await getAllowedEventIds(session);
+  return allowed === null || allowed.includes(eventId);
 }

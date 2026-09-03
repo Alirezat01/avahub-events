@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { requireSuperAdmin } from "@/lib/avahub/admin";
 import { updateEventAction } from "@/app/admin/events/actions";
 import { AdminEventForm } from "@/components/avahub/admin-event-form";
 
@@ -23,6 +24,7 @@ function toTehranInput(d: Date | null): string {
 
 export default async function EditEventPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  await requireSuperAdmin(`/admin/events/${id}/edit`);
   if (!UUID_RE.test(id)) notFound();
 
   const ev = await db.event.findUnique({ where: { id } });

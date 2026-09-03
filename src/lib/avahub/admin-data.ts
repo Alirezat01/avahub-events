@@ -71,15 +71,19 @@ export async function eventCounts(eventId: string) {
   return out;
 }
 
-/** آمار کلی داشبورد — همه ایونت‌ها */
-export async function globalCounts() {
+/** آمار کلی داشبورد — همه ایونت‌ها (یا فقط scope مدیر رویداد — فاز K) */
+export async function globalCounts(scope?: string[] | null) {
+  const evWhere = scope ? { id: { in: scope } } : {};
+  const regWhere = scope ? { eventId: { in: scope } } : {};
   const [totalEvents, publishedEvents, upcomingEvents, regRows, activeWaitlist] =
     await Promise.all([
-      db.event.count(),
-      db.event.count({ where: { status: "PUBLISHED" } }),
-      db.event.count({ where: { status: "PUBLISHED", startsAt: { gte: new Date() } } }),
-      db.registration.groupBy({ by: ["status", "cancelledBy"], _count: { _all: true } }),
-      db.waitlist.count({ where: { status: "ACTIVE" } }),
+      db.event.count({ where: evWhere }),
+      db.event.count({ where: { ...evWhere, status: "PUBLISHED" } }),
+      db.event.count({
+        where: { ...evWhere, status: "PUBLISHED", startsAt: { gte: new Date() } },
+      }),
+      db.registration.groupBy({ by: ["status", "cancelledBy"], where: regWhere, _count: { _all: true } }),
+      db.waitlist.count({ where: { status: "ACTIVE", ...regWhere } }),
     ]);
 
   const reg = { confirmed: 0, pending: 0, withdrawnByUser: 0, cancelledByAdmin: 0 };
@@ -95,9 +99,10 @@ export async function globalCounts() {
   return { totalEvents, publishedEvents, upcomingEvents, activeWaitlist, ...reg };
 }
 
-/** ردیف‌های جدول داشبورد: هر ایونت + شمارش‌هایش */
-export async function adminEventRows() {
+/** ردیف‌های جدول داشبورد: هر ایونت + شمارش‌هایش (با پشتیبانی scope — فاز K) */
+export async function adminEventRows(scope?: string[] | null) {
   const events = await db.event.findMany({
+    where: scope ? { id: { in: scope } } : {},
     orderBy: [{ startsAt: "desc" }],
     select: {
       id: true, slug: true, title: true, startsAt: true, capacity: true,

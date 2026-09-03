@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 import { requireAdmin } from "@/lib/avahub/admin";
 
 // ─────────────────────────────────────────────────────────────
-// چیدمان پنل مدیریت — فاز ۵
-// گارد در سطح layout: هر مسیر زیر /admin فقط برای SUPER_ADMIN
+// چیدمان پنل مدیریت — فاز ۵ + ناوبری نقش‌محور (فاز K)
+// گارد در سطح layout: فقط ادمین‌های فعال؛ دسترسی رویدادی در صفحات
 // ─────────────────────────────────────────────────────────────
 
 export const metadata: Metadata = {
@@ -16,6 +16,10 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const admin = await requireAdmin();
+  const isSuper = admin.role === "SUPER_ADMIN";
+
+  const navCls =
+    "px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap";
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-[#f5f5f0]">
@@ -30,65 +34,57 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <span className="sm:hidden">پنل</span>
             </Link>
             <nav className="flex items-center gap-1 text-xs sm:gap-1.5 sm:text-sm text-white/70 overflow-x-auto">
-              <Link href="/admin" className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap">
+              <Link href="/admin" className={navCls}>
                 داشبورد
               </Link>
-              <Link
-                href="/admin/events/new"
-                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
-              >
-                رویداد جدید
+              {isSuper && (
+                <Link href="/admin/events/new" className={navCls}>
+                  رویداد جدید
+                </Link>
+              )}
+              {isSuper && (
+                <Link href="/admin/journal" className={navCls}>
+                  مجله
+                </Link>
+              )}
+              {isSuper && (
+                <Link href="/admin/portfolio" className={navCls}>
+                  نمونه‌کارها
+                </Link>
+              )}
+              {isSuper && (
+                <Link href="/admin/leads" className={navCls}>
+                  سرنخ‌ها
+                </Link>
+              )}
+              {isSuper && (
+                <Link href="/admin/campaigns" className={navCls}>
+                  کمپین‌ها
+                </Link>
+              )}
+              {isSuper && (
+                <Link href="/admin/redirects" className={navCls}>
+                  ریدایرکت‌ها
+                </Link>
+              )}
+              {isSuper && (
+                <Link href="/admin/media" className={navCls}>
+                  رسانه‌ها
+                </Link>
+              )}
+              <Link href="/admin/analytics" className={navCls}>
+                آمار
               </Link>
-              <Link
-                href="/admin/journal"
-                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
-              >
-                مجله
-              </Link>
-              <Link
-                href="/admin/portfolio"
-                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
-              >
-                نمونه‌کارها
-              </Link>
-              <Link
-                href="/admin/leads"
-                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
-              >
-                سرنخ‌ها
-              </Link>
-              <Link
-                href="/admin/campaigns"
-                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
-              >
-                کمپین‌ها
-              </Link>
-              <Link
-                href="/admin/redirects"
-                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
-              >
-                ریدایرکت‌ها
-              </Link>
-              {admin.role === "SUPER_ADMIN" && (
-                <Link
-                  href="/admin/activity"
-                  className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
-                >
+              {isSuper && (
+                <Link href="/admin/activity" className={navCls}>
                   فعالیت
                 </Link>
               )}
-              <Link
-                href="/admin/media"
-                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
-              >
-                رسانه‌ها
-              </Link>
-              <Link
-                href="/admin/analytics"
-                className="px-2 py-1 rounded-md hover:bg-white/5 hover:text-white transition whitespace-nowrap"
-              >
-                آمار
-              </Link>
+              {isSuper && (
+                <Link href="/admin/team" className={navCls}>
+                  مدیران
+                </Link>
+              )}
             </nav>
           </div>
           <div className="flex items-center gap-3 text-xs sm:text-sm">

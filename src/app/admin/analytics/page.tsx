@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { BarChart3, ExternalLink } from "lucide-react";
-import { requireAdmin } from "@/lib/avahub/admin";
+import { requireAdmin, getAllowedEventIds } from "@/lib/avahub/admin";
 import {
   analyticsTotals,
   checkinRate,
@@ -38,14 +38,18 @@ const kpiTone = [
 ];
 
 export default async function AdminAnalyticsPage() {
+  // فاز K — مدیر رویداد فقط آمار رویدادهای تخصیص‌یافته را می‌بیند
+  const session = await requireAdmin("/admin/analytics");
+  const scope = await getAllowedEventIds(session);
+  const scoped = scope !== null;
   const [totals, daily, status, topEvents, sources, cities, checkin] = await Promise.all([
-    analyticsTotals(),
-    dailyRegistrations(30),
-    statusDistribution(),
-    topEventsByConfirmed(),
-    sourceBreakdown(),
-    cityBreakdown(),
-    checkinRate(),
+    analyticsTotals(scope),
+    dailyRegistrations(30, scope),
+    statusDistribution(scope),
+    topEventsByConfirmed(8, scope),
+    sourceBreakdown(scope),
+    cityBreakdown(scope),
+    checkinRate(scope),
   ]);
 
   const kpis = [
@@ -68,6 +72,11 @@ export default async function AdminAnalyticsPage() {
         <p className="mt-2 text-white/60">
           نمای گرافیکی داده‌های پلتفرم — ثبت‌نام‌ها، منابع جذب، حضور و محتوا.
         </p>
+        {scoped && (
+          <p className="mt-3 inline-block rounded-xl border border-[#d4af37]/40 bg-[#d4af37]/10 px-4 py-2 text-xs text-[#d4af37]">
+            🔒 نمایش فقط رویدادهای تخصیص‌یافتهٔ شما — آمار سراسری سایت برای مدیر ارشد است.
+          </p>
+        )}
       </div>
 
       {/* KPI */}

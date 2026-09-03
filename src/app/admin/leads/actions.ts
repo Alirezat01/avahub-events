@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
-import { assertAdmin } from "@/lib/avahub/admin";
+import { assertSuperAdmin } from "@/lib/avahub/admin";
 import { logActivity } from "@/lib/avahub/activity";
 import { LeadStatus } from "@prisma/client";
 
@@ -10,7 +10,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const STATUSES: LeadStatus[] = ["NEW", "CONTACTED", "QUALIFIED", "WON", "LOST"];
 
 export async function updateLeadAction(fd: FormData): Promise<void> {
-  const session = await assertAdmin();
+  const session = await assertSuperAdmin();
   const id = String(fd.get("id") ?? "");
   const status = String(fd.get("status") ?? "");
   const note = String(fd.get("adminNote") ?? "").trim();
@@ -40,7 +40,7 @@ export async function updateLeadAction(fd: FormData): Promise<void> {
 }
 
 export async function deleteLeadAction(fd: FormData): Promise<void> {
-  const session = await assertAdmin();
+  const session = await assertSuperAdmin();
   const id = String(fd.get("id") ?? "");
   if (!UUID_RE.test(id)) return;
 

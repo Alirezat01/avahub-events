@@ -1,14 +1,14 @@
-import { requireAdmin } from "@/lib/avahub/admin";
+import { requireSuperAdmin } from "@/lib/avahub/admin";
 import { leadRows, leadsToCsv } from "@/lib/avahub/leads";
 
 // ─────────────────────────────────────────────────────────────
-// فاز G — خروجی CSV سرنخ‌ها (با فیلتر اختیاری)
+// فاز G — خروجی CSV سرنخ‌ها (با فیلتر اختیاری) — فقط مدیر ارشد
 // ─────────────────────────────────────────────────────────────
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  await requireAdmin();
+  await requireSuperAdmin();
   const url = new URL(request.url);
   const rows = await leadRows({
     status: url.searchParams.get("status") ?? undefined,

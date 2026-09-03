@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/avahub/admin";
+import { requireSuperAdmin } from "@/lib/avahub/admin";
 import { db } from "@/lib/db";
 import { UtmBuilder } from "./utm-builder";
 import { formatJalaliDate } from "@/lib/avahub/jalali";
@@ -12,7 +12,7 @@ import { toPersianDigits } from "@/lib/avahub/jalali";
 export const dynamic = "force-dynamic";
 
 export default async function AdminCampaignsPage() {
-  await requireAdmin();
+  await requireSuperAdmin();
 
   const [campaigns, regGroups, events] = await Promise.all([
     db.campaign.findMany({ orderBy: { createdAt: "desc" }, take: 100 }),

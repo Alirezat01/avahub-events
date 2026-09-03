@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { assertAdmin } from "@/lib/avahub/admin";
+import { assertSuperAdmin } from "@/lib/avahub/admin";
 import {
   MEDIA_ALLOWED_TYPES,
   MEDIA_MAX_BYTES,
@@ -31,7 +31,7 @@ export async function uploadMediaAction(
   fd: FormData
 ): Promise<MediaActionState> {
   try {
-    await assertAdmin();
+    await assertSuperAdmin();
   } catch {
     return { error: "دسترسی غیرمجاز" };
   }
@@ -69,7 +69,7 @@ export async function replaceMediaAction(
   fd: FormData
 ): Promise<MediaActionState> {
   try {
-    await assertAdmin();
+    await assertSuperAdmin();
   } catch {
     return { error: "دسترسی غیرمجاز" };
   }
@@ -105,7 +105,7 @@ export async function deleteMediaAction(
   fd: FormData
 ): Promise<MediaActionState> {
   try {
-    await assertAdmin();
+    await assertSuperAdmin();
   } catch {
     return { error: "دسترسی غیرمجاز" };
   }

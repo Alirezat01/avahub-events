@@ -1,7 +1,9 @@
+import { requireSuperAdmin } from "@/lib/avahub/admin";
 import { createEventAction } from "@/app/admin/events/actions";
 import { AdminEventForm } from "@/components/avahub/admin-event-form";
 
 export default async function NewEventPage() {
+  await requireSuperAdmin("/admin/events/new");
   return (
     <div className="space-y-6">
       <div>

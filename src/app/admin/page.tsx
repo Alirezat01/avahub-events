@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getAdminSession, getAllowedEventIds } from "@/lib/avahub/admin";
 import { adminEventRows, globalCounts, fmtFa } from "@/lib/avahub/admin-data";
 import { adminNotifications } from "@/lib/avahub/admin-notifications";
 import { EventStatus } from "@prisma/client";
@@ -29,7 +30,15 @@ export default async function AdminDashboardPage({
   searchParams: Promise<{ status?: string; city?: string; q?: string; cloned?: string }>;
 }) {
   const sp = await searchParams;
-  const [g, allRows, notes] = await Promise.all([globalCounts(), adminEventRows(), adminNotifications()]);
+  // فاز K — دسترسی رویدادی: مدیر ارشد همه، مدیر رویداد فقط تخصیص‌یافته‌ها
+  const session = await getAdminSession();
+  const isSuper = session?.role === "SUPER_ADMIN";
+  const scope = await getAllowedEventIds(session!);
+  const [g, allRows, notes] = await Promise.all([
+    globalCounts(scope),
+    adminEventRows(scope),
+    adminNotifications(),
+  ]);
 
   // فاز E: فیلتر وضعیت / شهر / جستجو
   const rows = allRows.filter((e) => {
@@ -64,8 +73,8 @@ export default async function AdminDashboardPage({
         )}
       </div>
 
-      {/* اعلان‌ها — فاز G */}
-      {notes.length > 0 && (
+      {/* اعلان‌ها — فاز G (فقط مدیر ارشد) */}
+      {isSuper && notes.length > 0 && (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {notes.map((n) => {
             const toneCls =
@@ -150,12 +159,14 @@ export default async function AdminDashboardPage({
       <div className="rounded-2xl border border-white/10 bg-[#12121a] overflow-hidden">
         <div className="px-5 py-4 border-b border-white/10 flex items-center justify-between gap-3">
           <h2 className="font-bold">رویدادها و شمارش ثبت‌نام</h2>
-          <Link
-            href="/admin/events/new"
-            className="rounded-xl bg-[#d4af37] px-4 py-2 text-sm font-bold text-[#0a0a0f] hover:brightness-110 transition"
-          >
-            + رویداد جدید
-          </Link>
+          {isSuper && (
+            <Link
+              href="/admin/events/new"
+              className="rounded-xl bg-[#d4af37] px-4 py-2 text-sm font-bold text-[#0a0a0f] hover:brightness-110 transition"
+            >
+              + رویداد جدید
+            </Link>
+          )}
         </div>
 
         <div className="overflow-x-auto">
@@ -248,17 +259,19 @@ export default async function AdminDashboardPage({
                         >
                           QR
                         </Link>
-                        {/* فاز E: کلون ایونت */}
-                        <form action={cloneEventAction}>
-                          <input type="hidden" name="id" value={e.id} />
-                          <button
-                            type="submit"
-                            title="ساخت کپی از این رویداد (پیش‌نویس)"
-                            className="rounded-lg border border-white/15 px-3 py-1.5 text-xs hover:bg-white/5 transition"
-                          >
-                            کپی
-                          </button>
-                        </form>
+                        {/* فاز E: کلون ایونت — فقط مدیر ارشد */}
+                        {isSuper && (
+                          <form action={cloneEventAction}>
+                            <input type="hidden" name="id" value={e.id} />
+                            <button
+                              type="submit"
+                              title="ساخت کپی از این رویداد (پیش‌نویس)"
+                              className="rounded-lg border border-white/15 px-3 py-1.5 text-xs hover:bg-white/5 transition"
+                            >
+                              کپی
+                            </button>
+                          </form>
+                        )}
                       </div>
                     </td>
                   </tr>

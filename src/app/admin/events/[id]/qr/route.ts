@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import QRCode from "qrcode";
 import { db } from "@/lib/db";
-import { assertAdmin } from "@/lib/avahub/admin";
+import { assertAdmin, canAccessEvent } from "@/lib/avahub/admin";
 
 // ─────────────────────────────────────────────────────────────
 // کد QR ثبت‌نام رویداد — فاز ۵ب (قول فراموش‌شده!)
@@ -24,9 +24,12 @@ export async function GET(
   request: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  // ۱) گارد ادمین (لایهٔ سوم دفاع — مثل روت CSV)
+  // ۱) گارد ادمین + دسترسی رویدادی (فاز K)
   try {
-    await assertAdmin();
+    const session = await assertAdmin();
+    if (!(await canAccessEvent(session, (await ctx.params).id))) {
+      return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
+    }
   } catch {
     return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
   }

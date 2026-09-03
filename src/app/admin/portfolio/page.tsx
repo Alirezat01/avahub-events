@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { requireAdmin } from "@/lib/avahub/admin";
+import { requireSuperAdmin } from "@/lib/avahub/admin";
 import { db } from "@/lib/db";
 import { deletePortfolioAction, togglePortfolioActiveAction } from "./actions";
 import { fmtFa } from "@/lib/avahub/admin-data";
@@ -16,7 +16,7 @@ export default async function AdminPortfolioPage({
 }: {
   searchParams: Promise<{ created?: string; updated?: string }>;
 }) {
-  await requireAdmin("/admin/portfolio");
+  await requireSuperAdmin("/admin/portfolio");
   const sp = await searchParams;
   const items = await db.portfolioItem.findMany({
     orderBy: [{ sortOrder: "asc" }, { createdAt: "desc" }],

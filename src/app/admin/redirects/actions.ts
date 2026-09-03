@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
-import { assertAdmin } from "@/lib/avahub/admin";
+import { assertSuperAdmin } from "@/lib/avahub/admin";
 import { logActivity } from "@/lib/avahub/activity";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -20,7 +20,7 @@ function normTo(raw: string): string {
 
 /** ساخت ریدایرکت جدید */
 export async function createRedirectAction(fd: FormData): Promise<void> {
-  const session = await assertAdmin();
+  const session = await assertSuperAdmin();
   const fromPath = normFrom(String(fd.get("fromPath") ?? ""));
   const toPath = normTo(String(fd.get("toPath") ?? ""));
   const statusCode = String(fd.get("statusCode") ?? "301") === "302" ? 302 : 301;
@@ -60,7 +60,7 @@ export async function createRedirectAction(fd: FormData): Promise<void> {
 
 /** تغییر وضعیت فعال/غیرفعال یا مقصد */
 export async function updateRedirectAction(fd: FormData): Promise<void> {
-  const session = await assertAdmin();
+  const session = await assertSuperAdmin();
   const id = String(fd.get("id") ?? "");
   if (!UUID_RE.test(id)) return;
 
@@ -89,7 +89,7 @@ export async function updateRedirectAction(fd: FormData): Promise<void> {
 }
 
 export async function deleteRedirectAction(fd: FormData): Promise<void> {
-  const session = await assertAdmin();
+  const session = await assertSuperAdmin();
   const id = String(fd.get("id") ?? "");
   if (!UUID_RE.test(id)) return;
 

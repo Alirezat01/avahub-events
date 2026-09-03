@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { assertAdmin } from "@/lib/avahub/admin";
+import { assertSuperAdmin } from "@/lib/avahub/admin";
 
 // ─────────────────────────────────────────────────────────────
 // Server Actions نمونه‌کارها — فاز ۶ + فاز E (کیس‌استادی + سئو)
@@ -137,7 +137,7 @@ export async function createPortfolioAction(
   fd: FormData
 ): Promise<PortfolioFormState> {
   try {
-    await assertAdmin();
+    await assertSuperAdmin();
   } catch {
     return { error: "دسترسی غیرمجاز" };
   }
@@ -190,7 +190,7 @@ export async function updatePortfolioAction(
   fd: FormData
 ): Promise<PortfolioFormState> {
   try {
-    await assertAdmin();
+    await assertSuperAdmin();
   } catch {
     return { error: "دسترسی غیرمجاز" };
   }
@@ -243,7 +243,7 @@ export async function updatePortfolioAction(
 }
 
 export async function deletePortfolioAction(fd: FormData): Promise<void> {
-  await assertAdmin();
+  await assertSuperAdmin();
   const id = String(fd.get("id") ?? "");
   if (!UUID_RE.test(id)) return;
   await db.portfolioItem.delete({ where: { id } }).catch(() => null);
@@ -252,7 +252,7 @@ export async function deletePortfolioAction(fd: FormData): Promise<void> {
 }
 
 export async function togglePortfolioActiveAction(fd: FormData): Promise<void> {
-  await assertAdmin();
+  await assertSuperAdmin();
   const id = String(fd.get("id") ?? "");
   if (!UUID_RE.test(id)) return;
   const item = await db.portfolioItem.findUnique({

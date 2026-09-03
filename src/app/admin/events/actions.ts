@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { assertAdmin } from "@/lib/avahub/admin";
+import { assertSuperAdmin } from "@/lib/avahub/admin";
 import { logActivity } from "@/lib/avahub/activity";
 import type { EventStatus } from "@prisma/client";
 
@@ -134,7 +134,7 @@ export async function createEventAction(
   fd: FormData
 ): Promise<EventFormState> {
   try {
-    await assertAdmin();
+    await assertSuperAdmin();
   } catch {
     return { error: "دسترسی غیرمجاز" };
   }
@@ -193,7 +193,7 @@ export async function updateEventAction(
   fd: FormData
 ): Promise<EventFormState> {
   try {
-    await assertAdmin();
+    await assertSuperAdmin();
   } catch {
     return { error: "دسترسی غیرمجاز" };
   }
@@ -251,7 +251,7 @@ export async function updateEventAction(
 }
 
 export async function setEventStatusAction(fd: FormData): Promise<void> {
-  await assertAdmin();
+  await assertSuperAdmin();
   const id = String(fd.get("id") ?? "");
   const status = String(fd.get("status") ?? "");
   if (!UUID_RE.test(id)) return;
@@ -267,7 +267,7 @@ export async function setEventStatusAction(fd: FormData): Promise<void> {
 
 // ── فاز E: کلون ایونت (برای رویدادهای مشابه تکرارشونده) ──
 export async function cloneEventAction(fd: FormData): Promise<void> {
-  const session = await assertAdmin();
+  const session = await assertSuperAdmin();
   const id = String(fd.get("id") ?? "");
   if (!UUID_RE.test(id)) return;
 

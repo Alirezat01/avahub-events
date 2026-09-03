@@ -1,4 +1,4 @@
-import { requireAdmin } from "@/lib/avahub/admin";
+import { requireSuperAdmin } from "@/lib/avahub/admin";
 import { listMediaObjects, isMediaConfigured } from "@/lib/avahub/media";
 import { AdminMediaManager } from "@/components/avahub/admin-media-manager";
 
@@ -10,7 +10,7 @@ import { AdminMediaManager } from "@/components/avahub/admin-media-manager";
 export const dynamic = "force-dynamic";
 
 export default async function AdminMediaPage() {
-  await requireAdmin("/admin/media");
+  await requireSuperAdmin("/admin/media");
 
   const configured = isMediaConfigured();
   const items = configured ? await listMediaObjects() : null;

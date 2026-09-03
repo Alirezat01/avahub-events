@@ -123,6 +123,7 @@ model Event {
   category      Category?      @relation(fields: [categoryId], references: [id])
   registrations Registration[]
   waitlists     Waitlist[]
+  eventAdmins   EventAdmin[]
 
   @@index([status, startsAt]) /// کوئری اصلی سایت: رویدادهای منتشرشده آینده
   @@index([categoryId])
@@ -225,9 +226,25 @@ model Admin {
   isActive  Boolean   @default(true)
   createdAt DateTime  @default(now())
 
-  profile Profile @relation(fields: [profileId], references: [id])
+  profile     Profile      @relation(fields: [profileId], references: [id])
+  eventAdmins EventAdmin[]
 
   @@map("admins")
+}
+
+// فاز K — تخصیص رویداد به مدیر (دسترسی رویدادی)
+// مدیر رویداد فقط آمار/مشخصات رویدادهای تخصیص‌یافته را می‌بیند
+model EventAdmin {
+  id        String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  adminId   String   @db.Uuid
+  eventId   String   @db.Uuid
+  createdAt DateTime @default(now())
+
+  admin Admin @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  event Event @relation(fields: [eventId], references: [id], onDelete: Cascade)
+
+  @@unique([adminId, eventId])
+  @@map("event_admins")
 }
 
 // ─────────────────────────── Enums فاز ۶ ───────────────────────────

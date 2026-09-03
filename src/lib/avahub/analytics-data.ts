@@ -1,9 +1,9 @@
 import { db } from "@/lib/db";
 
 // ─────────────────────────────────────────────────────────────
-// داده‌های آمار پنل ادمین — فاز ۶ (C5)
+// داده‌های آمار پنل ادمین — فاز ۶ (C5) + scope مدیر رویداد (فاز K)
 // منبع: دیتابیس (ثبت‌نام‌ها، مخاطبان، منابع UTM، چک‌این‌ها)
-// آمار بازدید صفحات با GA4 در فاز د به همین صفحه وصل می‌شود
+// scope = null → همهٔ رویدادها (مدیر ارشد) | آرایه → فقط تخصیص‌یافته‌ها
 // ─────────────────────────────────────────────────────────────
 
 export type DailyPoint = { label: string; count: number };
@@ -19,11 +19,18 @@ function faDay(date: Date): string {
   }).format(date);
 }
 
+type Scope = string[] | null | undefined;
+
+/** فیلتر رویداد برای کوئری‌های ثبت‌نام/انتظار */
+function regWhere(scope: Scope) {
+  return scope ? { eventId: { in: scope } } : {};
+}
+
 /** ثبت‌نام‌های ۳۰ روز اخیر به تفکیک روز (به وقت تهران) */
-export async function dailyRegistrations(days = 30): Promise<DailyPoint[]> {
+export async function dailyRegistrations(days = 30, scope?: Scope): Promise<DailyPoint[]> {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   const rows = await db.registration.findMany({
-    where: { createdAt: { gte: since } },
+    where: { createdAt: { gte: since }, ...regWhere(scope) },
     select: { createdAt: true },
   });
 
@@ -47,9 +54,10 @@ export async function dailyRegistrations(days = 30): Promise<DailyPoint[]> {
 }
 
 /** وضعیت همهٔ ثبت‌نام‌ها */
-export async function statusDistribution(): Promise<NamedCount[]> {
+export async function statusDistribution(scope?: Scope): Promise<NamedCount[]> {
   const rows = await db.registration.groupBy({
     by: ["status", "cancelledBy"],
+    where: regWhere(scope),
     _count: { _all: true },
   });
   const out = { confirmed: 0, pending: 0, withdrawn: 0, cancelledByAdmin: 0 };
@@ -71,13 +79,14 @@ export async function statusDistribution(): Promise<NamedCount[]> {
 }
 
 /** پرفروش‌ترین رویدادها بر اساس ثبت‌نام قطعی */
-export async function topEventsByConfirmed(limit = 8): Promise<NamedCount[]> {
+export async function topEventsByConfirmed(limit = 8, scope?: Scope): Promise<NamedCount[]> {
   const events = await db.event.findMany({
+    where: scope ? { id: { in: scope } } : {},
     select: { id: true, title: true },
   });
   const rows = await db.registration.groupBy({
     by: ["eventId"],
-    where: { status: "CONFIRMED" },
+    where: { status: "CONFIRMED", ...regWhere(scope) },
     _count: { _all: true },
   });
   const titleOf = new Map(events.map((e) => [e.id, e.title]));
@@ -88,9 +97,10 @@ export async function topEventsByConfirmed(limit = 8): Promise<NamedCount[]> {
 }
 
 /** منابع ثبت‌نام (UTM) — بدون مقدار = «مستقیم/QR» */
-export async function sourceBreakdown(): Promise<NamedCount[]> {
+export async function sourceBreakdown(scope?: Scope): Promise<NamedCount[]> {
   const rows = await db.registration.groupBy({
     by: ["utmSource"],
+    where: regWhere(scope),
     _count: { _all: true },
   });
   return rows
@@ -102,8 +112,23 @@ export async function sourceBreakdown(): Promise<NamedCount[]> {
     .slice(0, 8);
 }
 
-/** شهرهای مخاطبان */
-export async function cityBreakdown(): Promise<NamedCount[]> {
+/** شهرهای مخاطبان — با scope از مسیر ثبت‌نام‌های رویدادها */
+export async function cityBreakdown(scope?: Scope): Promise<NamedCount[]> {
+  if (scope) {
+    const regs = await db.registration.findMany({
+      where: regWhere(scope),
+      select: { profile: { select: { city: true } } },
+    });
+    const counts = new Map<string, number>();
+    for (const r of regs) {
+      const key = r.profile.city ?? "نامشخص";
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return [...counts.entries()]
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 8);
+  }
   const rows = await db.profile.groupBy({
     by: ["city"],
     _count: { _all: true },
@@ -115,15 +140,15 @@ export async function cityBreakdown(): Promise<NamedCount[]> {
     .slice(0, 8);
 }
 
-/** شمارنده‌های کلی */
-export async function analyticsTotals() {
+/** شمارنده‌های کلی — آمار مخاطب/ثبت‌نام scope می‌شود، شمارش CMS سراسری می‌ماند */
+export async function analyticsTotals(scope?: Scope) {
   const [profiles, confirmed, pending, waitlist, checkins, posts, portfolio] =
     await Promise.all([
       db.profile.count(),
-      db.registration.count({ where: { status: "CONFIRMED" } }),
-      db.registration.count({ where: { status: "PENDING" } }),
-      db.waitlist.count({ where: { status: "ACTIVE" } }),
-      db.checkin.count(),
+      db.registration.count({ where: { status: "CONFIRMED", ...regWhere(scope) } }),
+      db.registration.count({ where: { status: "PENDING", ...regWhere(scope) } }),
+      db.waitlist.count({ where: { status: "ACTIVE", ...regWhere(scope) } }),
+      db.checkin.count({ where: { registration: regWhere(scope) } }),
       db.journalPost.count({ where: { status: "PUBLISHED" } }),
       db.portfolioItem.count({ where: { isActive: true } }),
     ]);
@@ -131,10 +156,10 @@ export async function analyticsTotals() {
 }
 
 /** ثبت‌نام‌های چک‌این‌شده برای نمودار حضور */
-export async function checkinRate(): Promise<{ name: string; value: number }[]> {
+export async function checkinRate(scope?: Scope): Promise<{ name: string; value: number }[]> {
   const [confirmed, checkedIn] = await Promise.all([
-    db.registration.count({ where: { status: "CONFIRMED" } }),
-    db.checkin.count(),
+    db.registration.count({ where: { status: "CONFIRMED", ...regWhere(scope) } }),
+    db.checkin.count({ where: { registration: regWhere(scope) } }),
   ]);
   const notYet = Math.max(0, confirmed - checkedIn);
   return [

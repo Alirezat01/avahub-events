@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { assertAdmin } from "@/lib/avahub/admin";
+import { assertSuperAdmin } from "@/lib/avahub/admin";
 
 // ─────────────────────────────────────────────────────────────
 // Server Actions مجله — فاز ۶ (فقط ادمین)
@@ -128,7 +128,7 @@ export async function createJournalAction(
   fd: FormData
 ): Promise<JournalFormState> {
   try {
-    await assertAdmin();
+    await assertSuperAdmin();
   } catch {
     return { error: "دسترسی غیرمجاز" };
   }
@@ -188,7 +188,7 @@ export async function updateJournalAction(
   fd: FormData
 ): Promise<JournalFormState> {
   try {
-    await assertAdmin();
+    await assertSuperAdmin();
   } catch {
     return { error: "دسترسی غیرمجاز" };
   }
@@ -246,7 +246,7 @@ export async function updateJournalAction(
 }
 
 export async function deleteJournalAction(fd: FormData): Promise<void> {
-  await assertAdmin();
+  await assertSuperAdmin();
   const id = String(fd.get("id") ?? "");
   if (!UUID_RE.test(id)) return;
   await db.journalPost.delete({ where: { id } }).catch(() => null);
@@ -255,7 +255,7 @@ export async function deleteJournalAction(fd: FormData): Promise<void> {
 }
 
 export async function toggleJournalStatusAction(fd: FormData): Promise<void> {
-  await assertAdmin();
+  await assertSuperAdmin();
   const id = String(fd.get("id") ?? "");
   if (!UUID_RE.test(id)) return;
   const post = await db.journalPost.findUnique({ where: { id }, select: { status: true } });

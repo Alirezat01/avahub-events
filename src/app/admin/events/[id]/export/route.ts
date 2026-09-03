@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { db } from "@/lib/db";
-import { assertAdmin } from "@/lib/avahub/admin";
+import { assertAdmin, canAccessEvent } from "@/lib/avahub/admin";
 import { registrationLabel } from "@/lib/avahub/admin-data";
 
 // ─────────────────────────────────────────────────────────────
@@ -44,9 +44,12 @@ export async function GET(
   request: NextRequest,
   ctx: { params: Promise<{ id: string }> }
 ) {
-  // ۱) گارد ادمین
+  // ۱) گارد ادمین + دسترسی رویدادی (فاز K)
   try {
-    await assertAdmin();
+    const session = await assertAdmin();
+    if (!(await canAccessEvent(session, (await ctx.params).id))) {
+      return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
+    }
   } catch {
     return NextResponse.json({ error: "دسترسی غیرمجاز" }, { status: 403 });
   }

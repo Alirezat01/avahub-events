@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/avahub/admin";
+import { requireSuperAdmin } from "@/lib/avahub/admin";
 import { leadRows, LEAD_STATUS_FA, LEAD_STATUS_CLASS } from "@/lib/avahub/leads";
 import { updateLeadAction, deleteLeadAction } from "./actions";
 import { formatJalaliDate } from "@/lib/avahub/jalali";
@@ -25,7 +25,7 @@ export default async function AdminLeadsPage({
 }: {
   searchParams: Promise<{ status?: string; q?: string }>;
 }) {
-  await requireAdmin();
+  await requireSuperAdmin();
   const sp = await searchParams;
   const rows = await leadRows({ status: sp.status, q: sp.q });
 

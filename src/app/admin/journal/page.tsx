@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/avahub/admin";
+import { requireSuperAdmin } from "@/lib/avahub/admin";
 import { db } from "@/lib/db";
 import { deleteJournalAction, toggleJournalStatusAction } from "./actions";
 import { fmtFa } from "@/lib/avahub/admin-data";
@@ -16,7 +16,7 @@ export default async function AdminJournalPage({
 }: {
   searchParams: Promise<{ created?: string; updated?: string }>;
 }) {
-  await requireAdmin("/admin/journal");
+  await requireSuperAdmin("/admin/journal");
   const sp = await searchParams;
   const posts = await db.journalPost.findMany({
     orderBy: [{ createdAt: "desc" }],

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { requireAdmin, canAccessEvent } from "@/lib/avahub/admin";
 import { setEventStatusAction } from "@/app/admin/events/actions";
 import {
   eventCounts,
@@ -40,6 +41,10 @@ export default async function AdminEventPage({
     },
   });
   if (!ev) notFound();
+
+  // فاز K — دسترسی رویدادی: مدیر رویداد فقط رویدادهای تخصیص‌یافته
+  const session = await requireAdmin(`/admin/events/${id}`);
+  if (!(await canAccessEvent(session, id))) notFound();
 
   const [counts, registrants, waitlist, origin] = await Promise.all([
     eventCounts(id),

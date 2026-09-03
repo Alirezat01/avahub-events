@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireAdmin } from "@/lib/avahub/admin";
+import { requireSuperAdmin } from "@/lib/avahub/admin";
 import { db } from "@/lib/db";
 import {
   createRedirectAction,
@@ -19,7 +19,7 @@ export default async function AdminRedirectsPage({
 }: {
   searchParams: Promise<{ ok?: string; err?: string }>;
 }) {
-  await requireAdmin();
+  await requireSuperAdmin();
   const sp = await searchParams;
   const rows = await db.redirect.findMany({ orderBy: { createdAt: "desc" } });
 
