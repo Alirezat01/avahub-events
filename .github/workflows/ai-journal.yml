@@ -1,0 +1,55 @@
+# ─────────────────────────────────────────────────────────────
+# فاز J — نویسندهٔ هوش مصنوعی مجلهٔ آواهاب ایونتس
+# هر هفته یک مقالهٔ فارسی سئوشده تولید و به‌صورت پیش‌نویس منتشر می‌کند
+# ادمین از پنل /admin/journal بازبینی و منتشر می‌کند
+#
+# Secrets لازم (Settings → Secrets and variables → Actions):
+#   GEMINI_API_KEY  — کلید Google AI Studio (aistudio.google.com/apikey)
+#   PUBLISH_TOKEN   — همان مقدار env متغیر PUBLISH_TOKEN روی Vercel
+# Variables لازم:
+#   SITE_URL        — مثل https://www.avahubevents.com
+# ─────────────────────────────────────────────────────────────
+
+name: AI Journal Writer
+
+on:
+  schedule:
+    # هر جمعه ۰۶:۳۰ UTC = ۱۰:۰۰ به وقت تهران
+    - cron: "30 6 * * 6"
+  workflow_dispatch:
+    inputs:
+      topic:
+        description: "موضوع دستی مقاله (خالی = انتخاب خودکار چرخشی)"
+        required: false
+        type: string
+      publish:
+        description: "انتشار مستقیم بدون بازبینی؟"
+        required: false
+        type: boolean
+        default: false
+
+concurrency:
+  group: ai-journal
+  cancel-in-progress: false
+
+jobs:
+  write-article:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate & publish article
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          AI_TOPIC: ${{ inputs.topic || '' }}
+          AI_POST_STATUS: ${{ inputs.publish == true && 'PUBLISHED' || 'DRAFT' }}
+        run: node scripts/ai-journal/generate.mjs
