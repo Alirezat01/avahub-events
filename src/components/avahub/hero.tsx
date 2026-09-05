@@ -185,7 +185,7 @@ export function Hero() {
                 })}
             className="text-4xl font-black leading-[1.35] sm:text-5xl md:text-6xl xl:text-[4.2rem] xl:leading-[1.28]"
           >
-            اینجا ایده‌های شما
+            اینجا ایده‌های شما{" "}
             <br />
             <span className="text-gradient-gold">تبدیل به تجربه می‌شود</span>
           </motion.h1>

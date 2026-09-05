@@ -18,8 +18,10 @@ import type { Prisma } from "@prisma/client";
 //   seoTitle / seoDescription / authorName
 //   status        "DRAFT" (پیش‌فرض) | "PUBLISHED"
 //
-// GET با توکن معتبر → ۴۰ مقالهٔ اخیر (عنوان/اسلاگ) برای اینکه
+// GET با توکن معتبر → ۴۰ مقالهٔ اخیر (عنوان/اسلاگ/کاور) برای اینکه
 // نویسندهٔ AI موضوع تکراری انتخاب نکند (فاز N)
+// PATCH با توکن معتبر → به‌روزرسانی فقط کاورِ یک مقالهٔ موجود
+//   بدنه: { slug*, coverImage* } — فاز O: پرکردن کاور مقاله‌های قدیمی
 // ─────────────────────────────────────────────────────────────
 
 export const dynamic = "force-dynamic";
@@ -71,6 +73,16 @@ async function requireToken(req: NextRequest): Promise<Response | null> {
   return null;
 }
 
+// ── کاور معتبر: مسیر استاتیک برند یا URL باکت media همین پروژه ──
+function validCover(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const storageBase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/, "");
+  const isStatic = /^\/images\/[a-z0-9-]+\.(png|jpg|webp)$/i.test(value);
+  const isStorage =
+    storageBase !== "" && value.startsWith(`${storageBase}/storage/v1/object/public/media/`);
+  return isStatic || isStorage ? value : null;
+}
+
 // ── فاز N: مقالات اخیر برای جلوگیری از تکرار موضوع ──
 export async function GET(req: NextRequest) {
   const denied = await requireToken(req);
@@ -79,12 +91,48 @@ export async function GET(req: NextRequest) {
     const posts = await db.journalPost.findMany({
       orderBy: { createdAt: "desc" },
       take: 40,
-      select: { title: true, slug: true, status: true, createdAt: true },
+      select: { title: true, slug: true, status: true, coverImage: true, createdAt: true },
     });
     return Response.json({ ok: true, posts });
   } catch (err) {
     console.error("recent-posts failed:", err);
     return Response.json({ ok: false, error: "خطای دیتابیس" }, { status: 500 });
+  }
+}
+
+// ── فاز O: به‌روزرسانی فقط کاورِ مقالهٔ موجود (پرکردن کاورهای خالی) ──
+export async function PATCH(req: NextRequest) {
+  const denied = await requireToken(req);
+  if (denied) return denied;
+
+  let body: Record<string, unknown>;
+  try {
+    body = (await req.json()) as Record<string, unknown>;
+  } catch {
+    return Response.json({ ok: false, error: "JSON نامعتبر" }, { status: 400 });
+  }
+
+  const slug = typeof body.slug === "string" ? body.slug.trim() : "";
+  const cover = validCover(body.coverImage);
+  if (!slug) {
+    return Response.json({ ok: false, error: "اسلاگ نامعتبر است" }, { status: 400 });
+  }
+  if (!cover) {
+    return Response.json(
+      { ok: false, error: "کاور نامعتبر است (فقط مسیر /images یا URL باکت media همین پروژه)" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const updated = await db.journalPost.update({
+      where: { slug },
+      data: { coverImage: cover },
+      select: { slug: true, coverImage: true },
+    });
+    return Response.json({ ok: true, slug: updated.slug, coverImage: updated.coverImage });
+  } catch {
+    return Response.json({ ok: false, error: "مقاله‌ای با این اسلاگ نبود" }, { status: 404 });
   }
 }
 
@@ -130,15 +178,7 @@ export async function POST(req: NextRequest) {
     : [];
 
   // کاور: مسیر استاتیک برند یا URL باکت media همین پروژه (تصویر AI فاز N)
-  const storageBase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/, "");
-  const isStaticCover =
-    typeof body.coverImage === "string" &&
-    /^\/images\/[a-z0-9-]+\.(png|jpg|webp)$/i.test(body.coverImage);
-  const isStorageCover =
-    typeof body.coverImage === "string" &&
-    storageBase !== "" &&
-    body.coverImage.startsWith(`${storageBase}/storage/v1/object/public/media/`);
-  const coverImage = isStaticCover || isStorageCover ? body.coverImage : "/images/event-showcase.png";
+  const coverImage = validCover(body.coverImage) ?? "/images/event-showcase.png";
 
   const status = body.status === "PUBLISHED" ? "PUBLISHED" : "DRAFT";
 

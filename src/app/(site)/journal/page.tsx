@@ -10,7 +10,8 @@ import { JsonLd, makeBreadcrumbJsonLd } from "@/components/avahub/json-ld";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "مجله آواهاب | آموزش برگزاری رویداد، برندسازی و تبلیغات",
+  // absolute: تا قالب ریشه، برند را دوبار تکرار نکند + عنوان زیر ۶۰ کاراکتر
+  title: { absolute: "مجله آواهاب ایونتس | برگزاری رویداد و برندسازی" },
   description:
     "مجله آواهاب ایونتس؛ مقالات آموزشی و تحلیلی درباره برگزاری رویداد و همایش، برندسازی، تبلیغات دیجیتال و تولید محتوا — دسته‌بندی‌شده و به‌روز.",
   alternates: { canonical: "/journal" },
