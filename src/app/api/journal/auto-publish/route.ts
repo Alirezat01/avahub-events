@@ -14,9 +14,12 @@ import type { Prisma } from "@prisma/client";
 //   excerpt       خلاصهٔ کارت مجله
 //   category      یکی از: رویدادها | برندسازی | تولید محتوا | تبلیغات
 //   tags[]        برچسب‌ها
-//   coverImage    مسیر کاور (مثلاً /images/event-conference.png)
+//   coverImage    مسیر استاتیک /images/... یا URL باکت media سونابیس
 //   seoTitle / seoDescription / authorName
 //   status        "DRAFT" (پیش‌فرض) | "PUBLISHED"
+//
+// GET با توکن معتبر → ۴۰ مقالهٔ اخیر (عنوان/اسلاگ) برای اینکه
+// نویسندهٔ AI موضوع تکراری انتخاب نکند (فاز N)
 // ─────────────────────────────────────────────────────────────
 
 export const dynamic = "force-dynamic";
@@ -53,8 +56,7 @@ async function uniqueSlug(base: string): Promise<string> {
   return `${base}-${Date.now()}`;
 }
 
-export async function POST(req: NextRequest) {
-  // ── احراز توکن ──
+async function requireToken(req: NextRequest): Promise<Response | null> {
   const secret = process.env.PUBLISH_TOKEN;
   if (!secret) {
     return Response.json(
@@ -66,6 +68,30 @@ export async function POST(req: NextRequest) {
   if (!provided || !safeTokenEqual(provided, secret)) {
     return Response.json({ ok: false, error: "توکن نامعتبر است" }, { status: 401 });
   }
+  return null;
+}
+
+// ── فاز N: مقالات اخیر برای جلوگیری از تکرار موضوع ──
+export async function GET(req: NextRequest) {
+  const denied = await requireToken(req);
+  if (denied) return denied;
+  try {
+    const posts = await db.journalPost.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 40,
+      select: { title: true, slug: true, status: true, createdAt: true },
+    });
+    return Response.json({ ok: true, posts });
+  } catch (err) {
+    console.error("recent-posts failed:", err);
+    return Response.json({ ok: false, error: "خطای دیتابیس" }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  // ── احراز توکن ──
+  const denied = await requireToken(req);
+  if (denied) return denied;
 
   // ── بدنه ──
   let body: Record<string, unknown>;
@@ -103,10 +129,16 @@ export async function POST(req: NextRequest) {
     ? body.tags.filter((t): t is string => typeof t === "string").slice(0, 8)
     : [];
 
-  const coverImage =
-    typeof body.coverImage === "string" && /^\/images\/[a-z0-9-]+\.(png|jpg|webp)$/i.test(body.coverImage)
-      ? body.coverImage
-      : "/images/event-showcase.png";
+  // کاور: مسیر استاتیک برند یا URL باکت media همین پروژه (تصویر AI فاز N)
+  const storageBase = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").replace(/\/+$/, "");
+  const isStaticCover =
+    typeof body.coverImage === "string" &&
+    /^\/images\/[a-z0-9-]+\.(png|jpg|webp)$/i.test(body.coverImage);
+  const isStorageCover =
+    typeof body.coverImage === "string" &&
+    storageBase !== "" &&
+    body.coverImage.startsWith(`${storageBase}/storage/v1/object/public/media/`);
+  const coverImage = isStaticCover || isStorageCover ? body.coverImage : "/images/event-showcase.png";
 
   const status = body.status === "PUBLISHED" ? "PUBLISHED" : "DRAFT";
 
