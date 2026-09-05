@@ -39,7 +39,8 @@ const eventSchema = z.object({
     .string()
     .trim()
     .toLowerCase()
-    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "اسلاگ فقط حروف انگلیسی کوچک، رقم و خط تیره")
+    // فاز M: اسلاگ فارسی هم مجاز است (حروف یونیکد) — مثل مجله و نمونه‌کار
+    .regex(/^[\p{L}\p{N}]+(?:-[\p{L}\p{N}]+)*$/u, "اسلاگ فقط حروف، رقم و خط تیره")
     .max(80)
     .optional()
     .or(z.literal("")),
@@ -77,9 +78,11 @@ function parseTehran(value: string | undefined | null): Date | null {
 }
 
 function slugify(title: string): string {
+  // فاز M: یونیکد-آگاه — عنوان فارسی خالی نمی‌شود، اسلاگ فارسی تولید می‌کند
+  // (URL فارسی در گوگل سالم ایندکس می‌شود و از فال‌بک ضعیف event-xyz جلوگیری می‌کند)
   const base = title
     .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
     .trim()
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-")

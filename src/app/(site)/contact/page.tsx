@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Instagram, Facebook, MapPin, Phone } from "lucide-react";
 import { PageHero } from "@/components/avahub/page-hero";
 import { JsonLd, makeBreadcrumbJsonLd } from "@/components/avahub/json-ld";
+import { SITE_URL } from "@/lib/avahub/site";
 import { Reveal } from "@/components/avahub/reveal";
 import { ContactForm } from "@/components/avahub/contact-form";
 import { WhatsAppIcon } from "@/components/avahub/whatsapp-icon";
@@ -45,8 +46,45 @@ const INFO = [
 ];
 
 export default function ContactPage() {
+  // فاز M — LocalBusiness (سئوی محلی تهران): NAP کامل + جغرافیا + areaServed
+  const localBusinessJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "@id": `${SITE_URL}/#localbusiness`,
+    name: "آواهاب ایونتس",
+    alternateName: "AVA HUB EVENTS",
+    description:
+      "آژانس برگزاری رویداد و تبلیغات در تهران — همایش، کنفرانس، کنسرت، اکتیویشن برند و کمپین تبلیغاتی",
+    url: SITE_URL,
+    telephone: "+989351077947",
+    priceRange: "$$",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "خیابان کریم‌خان زند، خیابان حسینی، پلاک ۶۱",
+      addressLocality: "تهران",
+      addressRegion: "تهران",
+      addressCountry: "IR",
+    },
+    geo: { "@type": "GeoCoordinates", latitude: 35.7156, longitude: 51.4161 },
+    areaServed: [
+      { "@type": "City", name: "تهران" },
+      { "@type": "Country", name: "ایران" },
+    ],
+    openingHoursSpecification: {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Saturday", "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday"],
+      opens: "09:00",
+      closes: "18:00",
+    },
+    sameAs: [
+      "https://instagram.com/avahubevents",
+      "https://facebook.com/avahubevents",
+      "https://avayeshabahang.com",
+    ],
+  };
   return (
     <>
+      <JsonLd data={localBusinessJsonLd} />
       <JsonLd
         data={makeBreadcrumbJsonLd([
           { name: "خانه", href: "/" },

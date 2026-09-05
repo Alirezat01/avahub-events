@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 import { SERVICES } from "@/lib/avahub/services";
 import { SITE_URL } from "@/lib/avahub/site";
+import { EVENT_TYPE_LANDINGS } from "@/lib/avahub/event-types";
 import { db } from "@/lib/db";
 
 const BASE = SITE_URL;
@@ -22,8 +23,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const d of [lastEvent?.updatedAt, lastPost?.updatedAt]) {
       if (d && d > contentUpdatedAt) contentUpdatedAt = d;
     }
-  } catch {
-    /* دیتابیس در دسترس نبود — همان تاریخ پیش‌فرض */
+  } catch (e) {
+    // فاز M: خطای دیتابیس دیگر بی‌صدا نادیده گرفته نمی‌شود — در لاگ سرور ثبت می‌شود
+    console.error("[sitemap] خطای خواندن lastModified از دیتابیس:", e);
   }
 
   const staticRoutes: MetadataRoute.Sitemap = ([
@@ -59,7 +61,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.8,
     }));
-  } catch {
+  } catch (e) {
+    console.error("[sitemap] خطای خواندن رویدادها:", e);
     eventRoutes = [];
   }
 
@@ -77,7 +80,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.6,
     }));
-  } catch {
+  } catch (e) {
+    console.error("[sitemap] خطای خواندن مقالات:", e);
     journalRoutes = [];
   }
 
@@ -94,9 +98,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.6,
     }));
-  } catch {
+  } catch (e) {
+    console.error("[sitemap] خطای خواندن نمونه‌کارها:", e);
     portfolioRoutes = [];
   }
 
-  return [...staticRoutes, ...serviceRoutes, ...eventRoutes, ...journalRoutes, ...portfolioRoutes];
+  // فاز M: لندینگ‌های اختصاصی انواع رویداد — صفحات کلیدی Content SEO
+  const eventTypeRoutes: MetadataRoute.Sitemap = EVENT_TYPE_LANDINGS.map((t) => ({
+    url: `${BASE}/event-types/${t.slug}`,
+    lastModified: contentUpdatedAt,
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
+  }));
+
+  return [
+    ...staticRoutes,
+    ...serviceRoutes,
+    ...eventTypeRoutes,
+    ...eventRoutes,
+    ...journalRoutes,
+    ...portfolioRoutes,
+  ];
 }

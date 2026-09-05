@@ -34,6 +34,32 @@ function b64url(input: string): string {
   return Buffer.from(input, "utf8").toString("base64url");
 }
 
+/**
+ * نرمال‌سازی کلید PEM — هر فرمتی که موقع پیست در Vercel به‌هم ریخته باشد
+ * خودش درست می‌کند: با گیومه / یک‌خطی / با n\ یا بدون آن / فقط بدنه / با فاصله و n\r
+ * (رفع ارور DECODER routines::unsupported)
+ */
+function normalizePem(raw: string): string {
+  let k = raw.trim();
+  if ((k.startsWith('"') && k.endsWith('"')) || (k.startsWith("'") && k.endsWith("'"))) {
+    k = k.slice(1, -1).trim();
+  }
+  k = k
+    .replace(/\\r\\n/g, "\n")
+    .replace(/\\\\n/g, "\n")
+    .replace(/\\n/g, "\n")
+    .replace(/\r/g, "");
+  if (!/BEGIN PRIVATE KEY/.test(k)) {
+    k = `-----BEGIN PRIVATE KEY-----\n${k}\n-----END PRIVATE KEY-----`;
+  }
+  const body = k
+    .replace(/-----BEGIN PRIVATE KEY-----/, "")
+    .replace(/-----END PRIVATE KEY-----/, "")
+    .replace(/\s+/g, "");
+  const wrapped = (body.match(/.{1,64}/g) ?? []).join("\n");
+  return `-----BEGIN PRIVATE KEY-----\n${wrapped}\n-----END PRIVATE KEY-----\n`;
+}
+
 /** JWT سرویس‌اکانت → توکن دسترسی گوگل (با کش در حافظه) */
 async function accessToken(clientEmail: string, privateKey: string): Promise<string> {
   const now = Math.floor(Date.now() / 1000);
@@ -51,9 +77,12 @@ async function accessToken(clientEmail: string, privateKey: string): Promise<str
   );
   const signer = createSign("RSA-SHA256");
   signer.update(`${header}.${claims}`);
-  const signature = signer
-    .sign(privateKey.replace(/\\n/g, "\n"))
-    .toString("base64url");
+  let signature: string;
+  try {
+    signature = signer.sign(normalizePem(privateKey)).toString("base64url");
+  } catch {
+    throw new Error("BAD_PRIVATE_KEY");
+  }
   const jwt = `${header}.${claims}.${signature}`;
 
   const res = await fetch(TOKEN_URL, {
@@ -148,6 +177,8 @@ export async function ga4Overview(): Promise<Ga4Overview> {
   } catch (e) {
     const raw = e instanceof Error ? e.message : "GA4_ERROR";
     const low = raw.toLowerCase();
+    if (raw.includes("BAD_PRIVATE_KEY") || low.includes("decoder") || low.includes("unsupported"))
+      return { error: "کلید خصوصی قابل خواندن نیست — موقع پیست در Vercel به‌هم ریخته. نسخهٔ جدید این ارور را خودکار درست می‌کند: فقط این فایل را آپلود و Redeploy کن، اگر باز خطا بود GA4_PRIVATE_KEY را دوباره از فایل JSON کپی کن." };
     if (raw.includes("401") || low.includes("unauthenticated") || low.includes("invalid_grant"))
       return { error: "احراز هویت گوگل رد شد — ایمیل و کلید خصوصی سرویس‌اکانت را بررسی کنید." };
     if (raw.includes("403") || low.includes("permission") || low.includes("denied"))

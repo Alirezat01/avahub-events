@@ -6,6 +6,7 @@ import { PageHero } from "@/components/avahub/page-hero";
 import { Reveal } from "@/components/avahub/reveal";
 import { getActivePortfolioItems, getPortfolioCases } from "@/lib/avahub/portfolio";
 import { JsonLd, makeBreadcrumbJsonLd } from "@/components/avahub/json-ld";
+import { SITE_URL } from "@/lib/avahub/site";
 
 export const dynamic = "force-dynamic";
 
@@ -49,8 +50,26 @@ export default async function PortfolioPage() {
         altText: null,
       }));
 
+  // فاز M — اسکیمای ItemList: فهرست کیس‌استادی‌ها برای گوگل
+  const allCases = featured ? [featured, ...rest] : rest;
+  const itemListJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "نمونه‌کارهای آواهاب ایونتس",
+    numberOfItems: allCases.filter((c) => c.slug).length,
+    itemListElement: allCases
+      .filter((c) => c.slug)
+      .map((c, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `${SITE_URL}/portfolio/${c.slug}`,
+        name: c.title,
+      })),
+  };
+
   return (
     <>
+      <JsonLd data={itemListJsonLd} />
       <JsonLd
         data={makeBreadcrumbJsonLd([
           { name: "خانه", href: "/" },

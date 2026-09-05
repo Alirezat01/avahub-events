@@ -1,27 +1,30 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PageHero } from "@/components/avahub/page-hero";
 import { EventExplorer } from "@/components/avahub/event-explorer";
 import { getUpcomingPublishedEvents, getActiveCategories } from "@/lib/avahub/events-db";
 import { JsonLd, makeBreadcrumbJsonLd } from "@/components/avahub/json-ld";
 import { SITE_URL } from "@/lib/avahub/site";
+import { EVENT_TYPE_LANDINGS } from "@/lib/avahub/event-types";
 
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "تقویم رویدادها | کنسرت، همایش، کارگاه و رویداد سازمانی",
   description:
-    "همهٔ رویدادهای پیش رو آواهاب ایونتس در یک تقویم: کنسرت، همایش، سمینار، کارگاه تخصصی، جشنواره و رویداد سازمانی در تهران و شهرها — ثبت‌حضور آنلاین رایگان با بلیت QR.",
+    "همهٔ رویدادهای پیش رو آواهاب ایونتس در یک تقویم: کنسرت و موسیقی زنده، همایش و کنفرانس، سمینار، کارگاه، نشست شبکه‌سازی، نمایشگاه، اکتیویشن برند و رویدادهای گالری در تهران و شهرها — ثبت‌حضور آنلاین رایگان با بلیت QR.",
   keywords: [
     "تقویم رویدادها",
     "رویدادهای تهران",
     "کنسرت",
-    "همایش",
-    "سمینار",
-    "کارگاه آموزشی",
-    "جشنواره",
+    "همایش و کنفرانس",
+    "سمینار آموزشی",
+    "کارگاه تخصصی",
+    "نشست شبکه‌سازی",
+    "نمایشگاه",
+    "اکتیویشن برند",
     "رویداد سازمانی",
     "ثبت نام رویداد",
-    "بلیت رویداد",
   ],
   alternates: { canonical: "/events" },
 };
@@ -67,8 +70,22 @@ export default async function EventsPage() {
       <PageHero
         eyebrow="UPCOMING EVENTS"
         title="رویدادهای پیش رو"
-        sub="از همایش و کنفرانس تا سمینار و کارگاه تخصصی — رویداد بعدی خود را پیدا کنید و رزرو را از دست ندهید."
+        sub="از کنسرت و لایو موسیقی تا همایش سازمانی، کارگاه تخصصی، نشست شبکه‌سازی، نمایشگاه و اکتیویشن برند — رویداد بعدی خود را پیدا کنید و رزرو را از دست ندهید."
       />
+      {/* فاز M — چیپ انواع رویداد: لینک‌سازی داخلی به لندینگ‌های ایندکس‌شدنی */}
+      <section className="mx-auto max-w-7xl px-4 sm:px-6" aria-label="انواع رویداد">
+        <div className="flex flex-wrap gap-2 pb-6">
+          {EVENT_TYPE_LANDINGS.map((t) => (
+            <Link
+              key={t.slug}
+              href={`/event-types/${t.slug}`}
+              className="rounded-full border border-border bg-card px-4 py-1.5 text-xs text-foreground/75 transition hover:border-gold/50 hover:text-gold"
+            >
+              {t.name}
+            </Link>
+          ))}
+        </div>
+      </section>
       <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6">
         {dbError ? (
           <div className="rounded-3xl border border-dashed border-border py-20 text-center">

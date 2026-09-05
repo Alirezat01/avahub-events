@@ -79,6 +79,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 آمار
               </Link>
               {isSuper && (
+                <Link href="/admin/seo" className={navCls}>
+                  سئو
+                </Link>
+              )}
+              {isSuper && (
                 <Link href="/admin/activity" className={navCls}>
                   فعالیت
                 </Link>

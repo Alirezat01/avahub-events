@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { EventCard } from "@/components/avahub/event-card";
 import { getEventBySlug, getRelatedEvents } from "@/lib/avahub/events-db";
+import { schemaEventType, dbTypeToSlug, EVENT_TYPE_LANDINGS, pickRelatedServicesForEvent } from "@/lib/avahub/event-types";
 import {
   getEventCapacitySummary,
   getUserRegistration,
@@ -96,8 +97,14 @@ export default async function EventDetailPage({ params }: Props) {
   const startsAt = event.startsAt;
   const endsAt = event.endsAt;
 
-  // اسکیمای Event — فاز د (SEO): نتیجهٔ غنی گوگل با تاریخ، مکان و ظرفیت
+  // اسکیمای Event — فاز د + فاز M: کاملاً داینامیک
+  // حضوری/آنلاین/ترکیبی، وضعیت واقعی، نوع رویداد و زبان
   const coverUrl = absoluteImageUrl(event.coverImage);
+  const isOnline = event.isOnline === true;
+  const eventStatusMap: Record<string, string> = {
+    PUBLISHED: "https://schema.org/EventScheduled",
+    CANCELLED: "https://schema.org/EventCancelled",
+  };
   const eventJsonLd: Record<string, unknown> = {
     "@context": "https://schema.org",
     "@type": "Event",
@@ -106,18 +113,29 @@ export default async function EventDetailPage({ params }: Props) {
     image: coverUrl ? [coverUrl] : undefined,
     startDate: startsAt.toISOString(),
     endDate: endsAt?.toISOString(),
-    eventStatus: "https://schema.org/EventScheduled",
-    eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    location: {
-      "@type": "Place",
-      name: event.venueName ?? event.venueCity,
-      address: {
-        "@type": "PostalAddress",
-        streetAddress: event.venueAddress ?? undefined,
-        addressLocality: event.venueCity,
-        addressCountry: "IR",
-      },
-    },
+    eventStatus: eventStatusMap[event.status] ?? "https://schema.org/EventScheduled",
+    eventAttendanceMode: isOnline
+      ? "https://schema.org/OnlineEventAttendanceMode"
+      : "https://schema.org/OfflineEventAttendanceMode",
+    ...(schemaEventType(event.eventType) ? { eventType: schemaEventType(event.eventType) } : {}),
+    inLanguage: "fa-IR",
+    isAccessibleForFree: true,
+    location: isOnline
+      ? {
+          "@type": "VirtualLocation",
+          name: event.venueName ?? "پخش آنلاین",
+          url: `${SITE_URL}/events/${event.slug}`,
+        }
+      : {
+          "@type": "Place",
+          name: event.venueName ?? event.venueCity,
+          address: {
+            "@type": "PostalAddress",
+            streetAddress: event.venueAddress ?? undefined,
+            addressLocality: event.venueCity,
+            addressCountry: "IR",
+          },
+        },
     organizer: {
       "@type": "Organization",
       name: "آواهاب ایونتس",
@@ -424,6 +442,39 @@ export default async function EventDetailPage({ params }: Props) {
             </div>
           </div>
         </section>
+
+        {/* فاز M — لینک‌سازی داخلی: نوع رویداد + خدمات مرتبط */}
+        {(dbTypeToSlug(event.eventType) || pickRelatedServicesForEvent(event).length > 0) && (
+          <section className="mt-10 rounded-2xl border border-border bg-card/60 p-5" aria-label="لینک‌های مرتبط">
+            <div className="flex flex-wrap items-center gap-2">
+              {dbTypeToSlug(event.eventType) && (
+                <>
+                  <span className="text-xs text-foreground/50">نوع رویداد:</span>
+                  <Link
+                    href={`/event-types/${dbTypeToSlug(event.eventType)}`}
+                    className="rounded-full border border-gold/40 bg-gold/10 px-4 py-1.5 text-xs font-bold text-gold transition hover:bg-gold/20"
+                  >
+                    همهٔ {EVENT_TYPE_LANDINGS.find((t) => t.slug === dbTypeToSlug(event.eventType))?.plural}
+                  </Link>
+                </>
+              )}
+              {pickRelatedServicesForEvent(event).length > 0 && (
+                <>
+                  <span className="ms-2 text-xs text-foreground/50">برگزار آن را می‌خواهید؟</span>
+                  {pickRelatedServicesForEvent(event).map((s) => (
+                    <Link
+                      key={s.slug}
+                      href={`/services/${s.slug}`}
+                      className="rounded-full border border-border px-4 py-1.5 text-xs text-foreground/75 transition hover:border-gold/40 hover:text-gold"
+                    >
+                      {s.title}
+                    </Link>
+                  ))}
+                </>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* رویدادهای مرتبط */}
         {related.length > 0 && (

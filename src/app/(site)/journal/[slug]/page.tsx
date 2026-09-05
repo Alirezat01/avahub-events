@@ -132,6 +132,16 @@ export default async function JournalArticlePage({
     .map((slug) => SERVICES.find((s) => s.slug === slug))
     .filter((s): s is (typeof SERVICES)[number] => Boolean(s));
 
+  // فاز M — مقالات مرتبط (همان دسته) برای لینک‌سازی داخلی مجله
+  const relatedPosts = await db.journalPost
+    .findMany({
+      where: { status: "PUBLISHED", category: post.category, slug: { not: post.slug } },
+      orderBy: { publishedAt: "desc" },
+      take: 3,
+      select: { slug: true, title: true, excerpt: true },
+    })
+    .catch(() => []);
+
   return (
     <>
       <JsonLd data={articleJsonLd} />
@@ -287,6 +297,34 @@ export default async function JournalArticlePage({
           </Link>
         </div>
       </section>
+
+      {/* فاز M — مقالات مرتبط */}
+      {relatedPosts.length > 0 && (
+        <section className="mt-14" aria-labelledby="related-posts">
+          <h2 id="related-posts" className="mb-5 text-lg font-black">
+            مقالات مرتبط
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {relatedPosts.map((rp) => (
+              <Link
+                key={rp.slug}
+                href={`/journal/${rp.slug}`}
+                className="group rounded-2xl border border-border bg-card/50 p-4 transition-colors hover:border-gold/40"
+              >
+                <span className="block text-sm font-black leading-6 transition-colors group-hover:text-gold-soft">
+                  {rp.title}
+                </span>
+                {rp.excerpt && (
+                  <span className="mt-2 block line-clamp-2 text-xs leading-6 text-foreground/55">
+                    {rp.excerpt}
+                  </span>
+                )}
+                <span className="mt-3 inline-block text-xs text-gold">خواندن مقاله ←</span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </>
   );
 }
