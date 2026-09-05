@@ -1,7 +1,9 @@
 # ─────────────────────────────────────────────────────────────
-# فاز J — نویسندهٔ هوش مصنوعی مجلهٔ آواهاب ایونتس
-# هر هفته یک مقالهٔ فارسی سئوشده تولید و به‌صورت پیش‌نویس منتشر می‌کند
-# ادمین از پنل /admin/journal بازبینی و منتشر می‌کند
+# فاز N — نویسندهٔ خودکار مجلهٔ آواهاب ایونتس (نسخهٔ کامل)
+# هفته‌ای دو مقاله فارسی با کاور اختصاصیِ تولیدی:
+#   چهارشنبه ۰۶:۳۰ UTC = ۱۰:۰۰ تهران  → اسلات B (روایت و تحلیل)
+#   شنبه     ۰۶:۳۰ UTC = ۱۰:۰۰ تهران  → اسلات A (راهنمای عملی)
+# موضوع را خودش انتخاب می‌کند (بدون تأیید ادمین) و مستقیم منتشر می‌کند.
 #
 # Secrets لازم (Settings → Secrets and variables → Actions):
 #   GEMINI_API_KEY  — کلید Google AI Studio (aistudio.google.com/apikey)
@@ -10,25 +12,28 @@
 #   SITE_URL        — مثل https://www.avahubevents.com
 # Variable اختیاری:
 #   GEMINI_MODEL    — نام مدل Gemini (پیش‌فرض: gemini-3.6-flash)
+#   IMAGE_MODEL     — مدل تصویر Pollinations (پیش‌فرض: flux؛ بی‌کلید و رایگان)
 # ─────────────────────────────────────────────────────────────
 
 name: AI Journal Writer
 
 on:
   schedule:
-    # هر جمعه ۰۶:۳۰ UTC = ۱۰:۰۰ به وقت تهران
+    # چهارشنبه ۰۶:۳۰ UTC = ۱۰:۰۰ به وقت تهران
+    - cron: "30 6 * * 3"
+    # شنبه ۰۶:۳۰ UTC = ۱۰:۰۰ به وقت تهران
     - cron: "30 6 * * 6"
   workflow_dispatch:
     inputs:
       topic:
-        description: "موضوع دستی مقاله (خالی = انتخاب خودکار چرخشی)"
+        description: "موضوع دستی مقاله (خالی = انتخاب خودکار هوشمند)"
         required: false
         type: string
       publish:
-        description: "انتشار مستقیم بدون بازبینی؟"
+        description: "انتشار مستقیم؟ (برداشتن تیک = پیش‌نویس)"
         required: false
         type: boolean
-        default: false
+        default: true
 
 concurrency:
   group: ai-journal
@@ -37,7 +42,7 @@ concurrency:
 jobs:
   write-article:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,12 +52,14 @@ jobs:
         with:
           node-version: 20
 
-      - name: Generate & publish article
+      - name: Generate cover & write & publish article
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.6-flash' }}
+          IMAGE_MODEL: ${{ vars.IMAGE_MODEL || 'flux' }}
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
           SITE_URL: ${{ vars.SITE_URL || secrets.SITE_URL }}
           AI_TOPIC: ${{ inputs.topic || '' }}
-          AI_POST_STATUS: ${{ inputs.publish == true && 'PUBLISHED' || 'DRAFT' }}
+          # اجرای زمان‌بندی‌شده = انتشار مستقیم؛ اجرای دستی = طبق تیک «publish»
+          AI_POST_STATUS: ${{ github.event_name == 'schedule' && 'PUBLISHED' || (inputs.publish == true && 'PUBLISHED' || 'DRAFT') }}
         run: node scripts/ai-journal/generate.mjs
