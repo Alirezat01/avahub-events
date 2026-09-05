@@ -1,0 +1,37 @@
+# ─────────────────────────────────────────────────────────────
+# فاز O — پرکردن کاور مقاله‌های قدیمی مجله با تصویر AI
+# فقط دستی اجرا می‌شود: تب Actions → AI Journal Cover Backfill → Run
+# برای هر مقالهٔ بدون کاور، عکس اختصاصی تولید و ذخیره می‌کند.
+# Secrets: همان GEMINI_API_KEY و PUBLISH_TOKEN + Variable SITE_URL
+# ─────────────────────────────────────────────────────────────
+
+name: AI Journal Cover Backfill
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ai-journal
+  cancel-in-progress: false
+
+jobs:
+  backfill-covers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Generate & attach covers
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-3.6-flash' }}
+          IMAGE_MODEL: ${{ vars.IMAGE_MODEL || 'flux' }}
+          PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
+          SITE_URL: ${{ vars.SITE_URL || secrets.SITE_URL }}
+        run: node scripts/ai-journal/backfill-covers.mjs
